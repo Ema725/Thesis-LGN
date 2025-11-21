@@ -1,0 +1,53 @@
+algorithm 1
+levels_back 200
+
+num_jobs 5
+num_function_nodes 1000
+num_variables 2
+num_constants 0 
+constant_type 0
+num_outputs 240
+num_functions 4
+max_arity 2
+num_parents 4
+num_offspring 8
+
+max_fitness_evaluations 4000000
+ideal_fitness 0.01
+minimizing_fitness 1
+
+crossover_type 0
+crossover_rate 0
+
+mutation_type 0
+probabilistic_point_mutation 1
+single_active_gene_mutation 0
+inversion_mutation 0
+duplication_mutation 1
+point_mutation_rate 0.1	
+duplication_rate 0.05
+inversion_rate 0.05
+max_duplication_depth 30
+max_inversion_depth 10
+
+neutral_genetic_drift 1
+simple_report_type 0
+print_configuration 1
+evaluate_expression	0
+
+num_eval_threads 1
+
+generate_random_seed 1
+global_seed 7847231234
+
+report_during_job 1
+report_after_job 1
+report_simple 0
+report_interval	20000
+
+checkpointing 1
+checkpoint_modulo 250000
+
+write_statfile 1
+.e
+
