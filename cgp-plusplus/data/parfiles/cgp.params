@@ -17,7 +17,7 @@ ideal_fitness 0.01
 minimizing_fitness 1
 
 crossover_type 0
-crossover_rate 0
+crossover_rate 0.3
 
 mutation_type 0
 probabilistic_point_mutation 1
