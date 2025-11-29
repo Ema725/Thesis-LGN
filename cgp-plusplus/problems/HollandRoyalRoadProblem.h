@@ -121,7 +121,7 @@ public:
                             int p_num_instances)
         : BlackBoxProblem<E, G, F>(p_parameters, p_evaluator, p_inputs, p_outputs, p_constants, p_num_instances) {
         this->name = "Holland's Royal Road Problem";
-        .
+        
         static_assert(std::is_floating_point<F>::value, "Fitness type F must be floating point for HRRProblem");
     }
 
