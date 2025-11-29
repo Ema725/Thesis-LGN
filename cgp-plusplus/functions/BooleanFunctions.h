@@ -83,6 +83,24 @@ E FunctionsBoolean<E>::call_function(E inputs[], int function) {
 		result = ~(inputs[0] | inputs[1]);
 		break;
 
+	case 4:
+		result = inputs[0];
+		break;
+	
+	case 5:
+		result = ~inputs[0];
+		break;
+
+	case 6:
+		// XOR
+		result = inputs[0] ^ inputs[1];
+		break;
+	
+	case 7:
+		// XNOR
+		result = ~(inputs[0] ^ inputs[1]);
+		break;
+
 	default:
 		throw std::invalid_argument("Illegal function number!");
 
@@ -116,6 +134,22 @@ std::string FunctionsBoolean<E>::FunctionsBoolean::function_name(int function) {
 		name = "NOR";
 		break;
 
+	case 4:
+		name = "BUF";
+		break;
+
+	case 5:
+		name = "NOT";
+		break;
+
+	case 6:
+		name = "XOR";
+		break;
+
+	case 7:
+		name = "XNOR";
+		break;
+
 	default:
 		throw std::invalid_argument("Illegal function number!");
 
@@ -132,7 +166,22 @@ std::string FunctionsBoolean<E>::input_name(int input) {
 
 template<class E>
 int FunctionsBoolean<E>::arity_of(int function) {
-	return 2;
+	switch (function) {
+        case 0: // AND
+        case 1: // OR
+        case 2: // NAND
+        case 3: // NOR
+        case 6: // XOR
+        case 7: // XNOR
+            return 2;
+        
+        case 4: // BUF
+        case 5: // NOT
+            return 1;
+            
+        default:
+            throw std::invalid_argument("Illegal function number in arity_of!");
+    }
 }
 
 #endif /* FUNCTIONS_BOOLEANFUNCTIONS_H_ */
