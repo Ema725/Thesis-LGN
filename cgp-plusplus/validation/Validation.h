@@ -47,6 +47,12 @@ public:
 		}
 		return true;
     }
+	static constexpr bool validate_mnist_type() {
+        if constexpr (!std::is_same<unsigned int, EVALUATION_TYPE>::value) {
+			return false;
+		}
+		return true;
+    }
 };
 
 #endif /* VALIDATION_VALIDATION_H_ */

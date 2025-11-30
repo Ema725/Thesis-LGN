@@ -1,18 +1,18 @@
 algorithm 1
 levels_back 200
 
-num_jobs 5
-num_function_nodes 1000
-num_variables 2
+num_jobs 1
+num_function_nodes 4000
+num_variables 784
 num_constants 0 
 constant_type 0
-num_outputs 240
-num_functions 4
+num_outputs 500
+num_functions 8
 max_arity 2
 num_parents 4
 num_offspring 8
 
-max_fitness_evaluations 4000000
+max_fitness_evaluations 80000
 ideal_fitness 0.01
 minimizing_fitness 1
 
@@ -43,9 +43,9 @@ global_seed 7847231234
 report_during_job 1
 report_after_job 1
 report_simple 0
-report_interval	20000
+report_interval	100
 
-checkpointing 1
+checkpointing 0
 checkpoint_modulo 250000
 
 write_statfile 1

@@ -26,7 +26,8 @@
 #include "initializer/SymbolicRegressionInitializer.h"
 #include "initializer/LogicSynthesisInitializer.h"
 #include "initializer/BlackBoxInitializer.h"
-#include "initializer/HollandRoyalRoadInitializer.h" // Aggiunto per HRR
+#include "initializer/HollandRoyalRoadInitializer.h" // Added for HRR
+#include "initializer/MnistLogicInitializer.h" // Added for MNIST
 #include "random/Random.h"
 
 typedef unsigned int PROBLEM_TYPE;
@@ -70,6 +71,7 @@ int main(int argcc, char **argvv, char **envp) {
 	const PROBLEM LOGIC_SYNTHESIS = 0;
 	const PROBLEM SYMBOLIC_REGRESSION = 1;
 	const PROBLEM HOLLAND_ROYAL_ROAD = 2;
+	const PROBLEM MNIST_LOGIC = 3;
 
 	std::string data_file = argvv[1];
 	std::string param_file = argvv[2];
@@ -112,7 +114,7 @@ int main(int argcc, char **argvv, char **envp) {
 
 	s = argvv[1];
 
-	// Validate the type of the passed datafile DA MODIFICARE
+	// Validate the type of the passed datafile
 	// ---------------------------------------------------------------------------------------
 	if (s.find(".plu") != std::string::npos) {
 		problem_type = LOGIC_SYNTHESIS;
@@ -120,7 +122,9 @@ int main(int argcc, char **argvv, char **envp) {
 		problem_type = SYMBOLIC_REGRESSION;
 	} else if (s.find(".hrr") != std::string::npos) {
 		problem_type = HOLLAND_ROYAL_ROAD;
-	} else {
+	} else if (s.find(".txt") != std::string::npos) {
+        problem_type = MNIST_LOGIC;
+    } else {
 		throw std::invalid_argument("Datatype is not supported!");
 	}
 
@@ -264,6 +268,15 @@ int main(int argcc, char **argvv, char **envp) {
         } else {
             throw std::invalid_argument(
                     "Evaluation type (must be unsigned int) is not supported for HRR!");
+        }
+    } else if (problem_type == MNIST_LOGIC) {
+        if constexpr (Validation::validate_mnist_type()) {
+            initializer = std::make_shared<
+                    MnistLogicInitializer<EVALUATION_TYPE, GENOME_TYPE,
+                            FITNESS_TYPE>>(data_file);
+        } else {
+            throw std::invalid_argument(
+                    "Evaluation type (must be unsigned int) is not supported for MNIST Logic!");
         }
     }
 
