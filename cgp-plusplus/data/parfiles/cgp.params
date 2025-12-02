@@ -1,5 +1,5 @@
 algorithm 1
-levels_back 200
+levels_back 800
 
 num_jobs 1
 num_function_nodes 4000
@@ -12,7 +12,7 @@ max_arity 2
 num_parents 4
 num_offspring 8
 
-max_fitness_evaluations 80000
+max_fitness_evaluations 800000
 ideal_fitness 0.01
 minimizing_fitness 1
 
