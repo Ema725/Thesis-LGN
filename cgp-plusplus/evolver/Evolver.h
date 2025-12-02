@@ -223,6 +223,7 @@ void Evolver<E, G, F>::execute_job(int job,
 					<< " :: Best Fitness: " << result.second
 					<< " :: Runtime (s): " << duration.count();
 
+			/*
 					// 1. Gets the best individual and the evaluator
 			this->population->sort();
             auto best_ind = this->population->get_individual(0);
@@ -250,7 +251,7 @@ void Evolver<E, G, F>::execute_job(int job,
                 
                 // Print the bit (1 if != 0, otherwise 0)
                 ss << (outputs->at(i) != 0 ? "1" : "0");
-            }
+            }*/
 
             ss << std::endl;
 		}
