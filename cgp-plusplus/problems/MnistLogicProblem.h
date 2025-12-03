@@ -33,6 +33,62 @@ public:
     }
 
     ~MnistLogicProblem() = default;
+    
+    /**
+     * @brief Calculates the exact number of correctly classified images.
+     * This method is separate from the fitness and is only used for reporting.
+     */
+    int validate_individual(std::shared_ptr<Individual<G, F>> individual) override {
+        int hits = 0;
+        
+        // Temporary vectors for the individual's output
+        std::shared_ptr<std::vector<E>> outputs_ind = std::make_shared<std::vector<E>>();
+        
+        // Loop over all images (instances)
+        for (int i = 0; i < this->num_instances; i++) {
+            
+            // 1. Run the network on the current image
+            // Note: we need to reconstruct the full input for the evaluator
+            std::shared_ptr<std::vector<E>> input_instance = std::make_shared<std::vector<E>>(this->inputs->at(i));
+            
+            // If there are constants (in your config they are 0, but we keep for compatibility)
+            if (this->constants != nullptr && !this->constants->empty()) {
+                input_instance->insert(std::end(*input_instance), std::begin(*this->constants), std::end(*this->constants));
+            }
+
+            outputs_ind->clear();
+            
+            // Valuta l'individuo (senza lock mtx qui, siamo nel thread principale di report)
+            this->evaluator->evaluate_iterative(individual, input_instance, outputs_ind);
+
+            // 2. Logica di Classificazione (Bit Counting)
+            int true_label = static_cast<int>(this->outputs->at(i)[0]);
+            int best_class = -1;
+            int max_bits_on = -1;
+
+            for (int class_idx = 0; class_idx < NUM_CLASSES; ++class_idx) {
+                int current_bits_on = 0;
+                int start_idx = class_idx * this->bits_per_class;
+
+                for (int bit = 0; bit < this->bits_per_class; ++bit) {
+                    if (outputs_ind->at(start_idx + bit) != 0) {
+                        current_bits_on++;
+                    }
+                }
+
+                if (current_bits_on > max_bits_on) {
+                    max_bits_on = current_bits_on;
+                    best_class = class_idx;
+                }
+            }
+
+            // 3. Incrementa Hits se corretto
+            if (best_class == true_label) {
+                hits++;
+            }
+        }
+        return hits;
+    }
 
     /**
      * @brief Valuta una singola predizione.
@@ -49,6 +105,8 @@ public:
         // 2. Logica di Bit-Counting (Population Count)
         int best_class = -1;
         int max_bits_on = -1;
+        int prediction_strength = 0;
+
 
         // Itera su ogni classe (0-9)
         for (int class_idx = 0; class_idx < NUM_CLASSES; ++class_idx) {
@@ -69,13 +127,16 @@ public:
                 max_bits_on = current_bits_on;
                 best_class = class_idx;
             }
+            if (class_idx == true_label) {
+                prediction_strength = current_bits_on;
+            }
         }
 
-        // 3. Calcolo Fitness (Errore)
+        // the more bits on for the correct class, the better
         if (best_class == true_label) {
-            return 0.0; // Corretto -> 0 errori
+            return 0 - prediction_strength;
         } else {
-            return 1.0; // Sbagliato -> 1 errore
+            return 50.0 + (max_bits_on - prediction_strength); // the more its wrong, the worse
         }
     }
 

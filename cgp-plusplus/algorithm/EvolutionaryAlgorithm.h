@@ -258,10 +258,36 @@ void EvolutionaryAlgorithm<E, G, F>::report(int generation_number) {
 
 	if (this->report_during_job) {
 		if (generation_number % this->report_interval == 0) {
-			std::cout << "Generation # " << this->generation_number
-					<< " :: Best Fitness: " << this->best_fitness << std::endl;
+			
+			//get best individual
+			this->population->sort();
+            auto best_ind = this->population->get_individual(0);
+
+			//get best fitness
+			F best_fitness = this->best_fitness;
+			
+			// Recupera il problema dal composite
+            auto problem = this->composite->get_problem();
+
+			// Recupera numero campioni e calcola hits
+                int total_samples = problem->get_num_instances();
+                int hits = problem->validate_individual(best_ind);
+                
+                std::stringstream ss;
+                ss << "Generation # " << generation_number 
+                   << " :: Best Fitness (Score): " << best_fitness;
+
+                // Stampa accuracy solo se supportata (hits != -1)
+                if (hits != -1) {
+                    double accuracy = (double)hits / total_samples * 100.0;
+                    ss << " :: Accuracy: " << hits << "/" << total_samples 
+                       << " (" << accuracy << "%)";
+                }
+                
+                ss << std::endl;
+                std::cout << ss.str();
 		}
-	}
+    }
 }
 
 /// @brief Checks for the predefined ideal fitness.  

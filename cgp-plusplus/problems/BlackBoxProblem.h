@@ -75,6 +75,14 @@ public:
 			std::shared_ptr<std::vector<E>> outputs_individual) = 0;
 	const std::string& get_name() const;
 
+	int get_num_instances() const {
+        return this->num_instances;
+    }
+
+	virtual int validate_individual(std::shared_ptr<Individual<G, F>> individual) {
+        return -1; 
+    }
+
 	virtual ~BlackBoxProblem() = default;
 };
 

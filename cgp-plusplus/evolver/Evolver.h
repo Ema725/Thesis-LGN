@@ -219,40 +219,26 @@ void Evolver<E, G, F>::execute_job(int job,
 				ss << result.second << std::endl;
 			}
 		} else {
-			ss << "Job # " << job << " :: Evaluations: " << result.first
-					<< " :: Best Fitness: " << result.second
-					<< " :: Runtime (s): " << duration.count();
-
-			/*
-					// 1. Gets the best individual and the evaluator
 			this->population->sort();
             auto best_ind = this->population->get_individual(0);
-            auto evaluator = this->initializer->get_evaluator();
 
-            // Recreate the input [0, 1] that we defined in the Initializer
-            // (Necessary because the evaluator needs data to calculate the output)
-            std::shared_ptr<std::vector<E>> inputs = std::make_shared<std::vector<E>>();
-            inputs->push_back(static_cast<E>(0)); // Input 0 = False
-            inputs->push_back(static_cast<E>(1)); // Input 1 = True
-            // 3. Container for the calculated output
-            std::shared_ptr<std::vector<E>> outputs = std::make_shared<std::vector<E>>();
+            // 2. Calcola l'accuratezza finale
+            auto problem = this->composite->get_problem();
+            int hits = problem->validate_individual(best_ind);
+            int total_samples = problem->get_num_instances();
 
-            // 4. Run the network
-            // We use evaluate_iterative to get the raw output vector
-            evaluator->evaluate_iterative(best_ind, inputs, outputs);
+            // 3. Costruisci la stringa di report
+            ss << "Job # " << job << " :: Evaluations: " << result.first
+                    << " :: Best Fitness: " << result.second
+                    << " :: Runtime (s): " << duration.count();
 
-            // 5. Format and add to the stream
-            ss << " :: Best Phenotype: ";
-            for (size_t i = 0; i < outputs->size(); ++i) {
-                // Add a space every 15 bits (but not at the beginning)
-                if (i > 0 && i % 15 == 0) {
-                    ss << " ";
-                }
-                
-                // Print the bit (1 if != 0, otherwise 0)
-                ss << (outputs->at(i) != 0 ? "1" : "0");
-            }*/
-
+            // 4. Aggiungi l'accuratezza se disponibile
+            if (hits != -1) {
+                double accuracy = (double)hits / total_samples * 100.0;
+                ss << " :: Accuracy: " << hits << "/" << total_samples 
+                   << " (" << accuracy << "%)";
+            }
+            
             ss << std::endl;
 		}
 	}
