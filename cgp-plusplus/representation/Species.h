@@ -120,24 +120,45 @@ int Species<G>::calc_genome_size() {
 /// @return minimum gene value
 template<class G>
 int Species<G>::min_gene(int position) {
-	int min_gene;
-	int node_number;
-	int phenotype = decode_genotype_at(position);
+int max_arity = parameters->get_max_arity();
+    int num_inputs = parameters->get_num_inputs();
+    int gene_type = position % (max_arity + 1);
 
-	if (phenotype == this->OUTPUT_GENE) {
-		min_gene = this->num_inputs + this->num_nodes - this->levels_back;
-	} else if (phenotype == this->FUNCTION_GENE) {
-		min_gene = 0;
-	} else {
-		node_number = node_number_from_position(position);
-		min_gene = node_number - this->levels_back;
-	}
+    // Se è un gene Funzione (opcode), parte sempre da 0
+    if (gene_type == 0) {
+        return 0;
+    }
 
-	if (min_gene < 0) {
-		min_gene = 0;
-	}
+    // --- SEZIONE CONNESSIONI (Input Genes) ---
 
-	return min_gene;
+    // Calcolo indice assoluto del nodo corrente (es. nodo 10, 11...)
+    int node_idx_relative = position / (max_arity + 1); // 0, 1, 2... tra i nodi funzione
+    int node_idx_absolute = node_idx_relative + num_inputs;
+
+    // Caso 1: Layer Fissi attivi
+    if (parameters->is_fixed_layers()) {
+        int width = parameters->get_levels_back(); // In questa modalità, levels_back è la larghezza
+        int current_layer = node_idx_relative / width;
+
+        // Se siamo nel primo layer (Layer 0), ci connettiamo agli input del sistema
+        if (current_layer == 0) {
+            return 0; // Primo input del sistema
+        } else {
+            // Altrimenti ci connettiamo all'inizio del layer precedente
+            // Start index layer precedente = NumInputs + (LayerCorrente - 1) * Width
+            int prev_layer_start_idx = num_inputs + ((current_layer - 1) * width);
+            return prev_layer_start_idx;
+        }
+    }
+    // Caso 2: Comportamento Standard (CGP classico)
+    else {
+        int levels_back = parameters->get_levels_back();
+        int min_val = node_idx_absolute - levels_back;
+        if (min_val < 0) {
+            return 0;
+        }
+        return min_val;
+    }
 }
 
 /// @brief Returns the maximum gene for the given position.
@@ -146,18 +167,42 @@ int Species<G>::min_gene(int position) {
 /// @return maximum gene value
 template<class G>
 int Species<G>::max_gene(int position) {
-	int max_gene;
-	int node_number;
-	int phenotype = decode_genotype_at(position);
+	int max_arity = parameters->get_max_arity();
+    int num_inputs = parameters->get_num_inputs();
+    int num_functions = parameters->get_num_functions();
+    int gene_type = position % (max_arity + 1);
 
-	if (phenotype == OUTPUT_GENE) {
-		max_gene = num_inputs + num_nodes - 1;
-	} else if (phenotype == FUNCTION_GENE) {
-		max_gene = num_functions - 1;
-	} else {
-		max_gene = node_number_from_position(position) - 1;
-	}
-	return max_gene;
+    // Se è un gene Funzione, ritorna l'indice massimo delle funzioni
+    if (gene_type == 0) {
+        return num_functions - 1;
+    }
+
+    // --- SEZIONE CONNESSIONI (Input Genes) ---
+
+    int node_idx_relative = position / (max_arity + 1);
+    int node_idx_absolute = node_idx_relative + num_inputs;
+
+    // Caso 1: Layer Fissi attivi
+    if (parameters->is_fixed_layers()) {
+        int width = parameters->get_levels_back();
+        int current_layer = node_idx_relative / width;
+
+        // Se siamo nel primo layer, il max è l'ultimo input del sistema
+        if (current_layer == 0) {
+            return num_inputs - 1;
+        } else {
+            // Altrimenti ci connettiamo alla fine del layer precedente
+            // End index layer precedente = NumInputs + (LayerCorrente * Width) - 1
+            // Esempio: Se sono in Layer 1, voglio connettermi fino a (NumInputs + 1*Width - 1)
+            int prev_layer_end_idx = num_inputs + (current_layer * width) - 1;
+            return prev_layer_end_idx;
+        }
+    }
+    // Caso 2: Comportamento Standard (CGP classico)
+    else {
+        // Si può connettere fino al nodo immediatamente precedente
+        return node_idx_absolute - 1;
+    }
 }
 
 /// @brief Decodes the genotype at a specified position.

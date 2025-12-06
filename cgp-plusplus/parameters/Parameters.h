@@ -104,6 +104,7 @@ private:
 	int num_parents;
 
 	bool neutral_genetic_drift;
+	bool fixed_layers;
 
 	bool evaluate_expression;
 	bool minimizing_fitness;
@@ -196,6 +197,9 @@ public:
 
 	int get_levels_back() const;
 	void set_levels_back(int p_levels_back);
+
+	bool is_fixed_layers() const;
+    void set_fixed_layers(bool p_fixed_layers); //MODIFICATO
 
 	bool is_minimizing_fitness() const;
 	void set_minimizing_fitness(bool p_miniming_fitness);

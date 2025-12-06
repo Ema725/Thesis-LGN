@@ -169,7 +169,9 @@ void Initializer<E, G, F>::init_parfile_parameters(std::string parfile_path) {
 				this->parameters->set_num_parents(value);
 			} else if (parameter == "ideal_fitness") {
 				this->parameters->set_ideal_fitness(value);
-			} else if (parameter == "minimizing_fitness") {
+			} else if (parameter == "fixed_layers") {
+                this->parameters->set_fixed_layers(state);
+            } else if (parameter == "minimizing_fitness") {
 				this->parameters->set_minimizing_fitness(state);
 			} else if (parameter == "probabilistic_point_mutation"
 					&& state == true) {

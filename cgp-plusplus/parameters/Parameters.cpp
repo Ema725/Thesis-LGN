@@ -46,6 +46,7 @@ Parameters::Parameters() {
 	ideal_fitness = 0;
 
 	neutral_genetic_drift = true;
+	fixed_layers = false;
 
 	evaluate_expression = false;
 	minimizing_fitness = true;
@@ -517,6 +518,15 @@ bool Parameters::is_checkpointing() const {
 
 void Parameters::set_checkpointing(bool p_checkpointing) {
 	this->checkpointing = p_checkpointing;
+}
+
+//Fixed layers
+bool Parameters::is_fixed_layers() const {
+    return this->fixed_layers;
+}
+
+void Parameters::set_fixed_layers(bool p_fixed_layers) {
+    this->fixed_layers = p_fixed_layers;
 }
 
 PROBLEM Parameters::get_problem() const {
