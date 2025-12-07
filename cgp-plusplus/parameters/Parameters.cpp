@@ -44,6 +44,7 @@ Parameters::Parameters() {
 	max_generations = -1;
 	max_fitness_evaluations = -1;
 	ideal_fitness = 0;
+	fitness_function = 0;
 
 	neutral_genetic_drift = true;
 	fixed_layers = false;
@@ -340,6 +341,14 @@ bool Parameters::is_minimizing_fitness() const {
 
 void Parameters::set_minimizing_fitness(bool p_miniming_fitness) {
 	this->minimizing_fitness = p_miniming_fitness;
+}
+
+int Parameters::get_fitness_function() const {
+    return this->fitness_function;
+}
+//Modificato
+void Parameters::set_fitness_function(int p_fitness_function) {
+    this->fitness_function = p_fitness_function;
 }
 
 int Parameters::get_num_jobs() const {

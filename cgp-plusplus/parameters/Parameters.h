@@ -102,6 +102,7 @@ private:
 	int levels_back;
 	int num_offspring;
 	int num_parents;
+	int fitness_function;
 
 	bool neutral_genetic_drift;
 	bool fixed_layers;
@@ -191,6 +192,9 @@ public:
 
 	int get_num_parents() const;
 	void set_num_parents(int p_num_parents);
+
+	int get_fitness_function() const;
+    void set_fitness_function(int p_fitness_function); //MODIFICATO
 
 	int get_num_offspring() const;
 	void set_num_offspring(int p_num_offspring);

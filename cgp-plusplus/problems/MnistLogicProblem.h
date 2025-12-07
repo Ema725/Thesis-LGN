@@ -106,6 +106,8 @@ public:
         int best_class = -1;
         int max_bits_on = -1;
         int prediction_strength = 0;
+        int max_incorrect_bits = 0;
+        int sum_incorrect_bits = 0;
 
 
         // Itera su ogni classe (0-9)
@@ -129,14 +131,57 @@ public:
             }
             if (class_idx == true_label) {
                 prediction_strength = current_bits_on;
+            } else {
+                // Statistiche sulle classi sbagliate
+                sum_incorrect_bits += current_bits_on;
+                if (current_bits_on > max_incorrect_bits) {
+                    max_incorrect_bits = current_bits_on;
+                }
             }
         }
 
         // the more bits on for the correct class, the better
-        if (best_class == true_label) {
-            return 0 - prediction_strength;
-        } else {
-            return 50.0 + (max_bits_on - prediction_strength); // the more its wrong, the worse
+        int func_type = this->parameters->get_fitness_function();
+
+        switch (func_type) {
+            case 0: //minfitness = -50 * nclasses
+                if (best_class == true_label) {
+                    return 0.0 - prediction_strength;
+                } else {
+                    // Penalizza in base alla distanza dal vincitore attuale
+                    return 50.0 + (max_bits_on - prediction_strength);
+                }
+
+            case 1: //minfitness = 0
+                if (best_class == true_label) {
+                    return 0.0;
+                } else {
+                    // Penalizza in base alla distanza dal vincitore attuale
+                    return 50.0 + (max_bits_on - prediction_strength);
+                }
+
+            case 2: //minfitness = -50 * nclasses
+                return (max_incorrect_bits - prediction_strength);
+            
+            case 3: //minfitness = -50 * nclasses
+                return static_cast<F>(sum_incorrect_bits - prediction_strength);
+            
+            case 4: //minfitness = 0
+            if (best_class == true_label) {
+                return 0.0;
+            } else {
+                return 50.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.1;
+            }
+
+            case 5: //minfitness = 0
+            if (best_class == true_label) {
+                return 0.0;
+            } else {
+                return 50.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
+            }
+
+            default:
+                throw std::invalid_argument("Unknown fitness_function type!");
         }
     }
 
