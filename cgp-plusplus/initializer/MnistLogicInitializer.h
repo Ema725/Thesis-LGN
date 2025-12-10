@@ -2,7 +2,7 @@
 #define INITIALIZER_MNISTLOGICINITIALIZER_H_
 
 #include "BlackBoxInitializer.h"
-#include "../problems/MnistLogicProblem.h" // Creeremo questo file al prossimo passo
+#include "../problems/MnistLogicProblem.h"
 #include "../functions/BooleanFunctions.h"
 
 #include <fstream>
@@ -21,6 +21,9 @@ public:
         : BlackBoxInitializer<E, G, F>(p_benchmark_file) {
     }
 
+    std::vector<std::vector<E>> full_inputs_store;
+    std::vector<std::vector<E>> full_outputs_store;
+
     ~MnistLogicInitializer() = default;
 
     /**
@@ -31,6 +34,10 @@ public:
      */
     void read_data() override {
         std::ifstream ifs(this->benchmark_file);
+
+        std::cout << "[DEBUG] Batch Training Enabled? " << (this->parameters->is_batch_training() ? "YES" : "NO") << std::endl;
+        std::cout << "[DEBUG] Batch Size Param: " << this->parameters->get_batch_size() << std::endl;
+        std::cout << "[DEBUG] File Size Param: " << this->parameters->get_file_size() << std::endl;
         
         if (!ifs.is_open()) {
             throw std::runtime_error("Could not open MNIST data file: " + this->benchmark_file);
@@ -48,6 +55,17 @@ public:
                   << ", Inputs: " << num_inputs_file 
                   << ", Classes: " << num_classes_file << std::endl;
 
+        // Verifica consistenza parametri batch
+        if (this->parameters->is_batch_training()) {
+            if (num_samples_file != this->parameters->get_file_size()) {
+                std::cout << "WARNING: file_size in params differs from file header!" << std::endl;
+            }
+            // La "finestra attiva" sarà grande quanto una batch
+            this->num_instances = this->parameters->get_batch_size();
+        } else {
+            this->num_instances = num_samples_file;
+        }
+              
         // 2. for now i set a single batch with all samples
         this->num_instances = num_samples_file;
         this->parameters->set_num_variables(num_inputs_file); // 784
@@ -56,9 +74,13 @@ public:
         int total_outputs = num_classes_file * BITS_PER_CLASS;
         this->parameters->set_num_outputs(total_outputs);
 
-        // 3. Allocates memory for inputs and outputs
-        this->inputs = std::make_shared<std::vector<std::vector<E>>>(this->num_instances);
-        this->outputs = std::make_shared<std::vector<std::vector<E>>>(this->num_instances);
+        // Alloca i vettori ATTIVI (quelli che userà l'Evaluator)
+        this->inputs = std::make_shared<std::vector<std::vector<E>>>();
+        this->outputs = std::make_shared<std::vector<std::vector<E>>>();
+
+        // Vettori temporanei per TUTTI i dati
+        std::vector<std::vector<E>> all_inputs_vec;
+        std::vector<std::vector<E>> all_outputs_vec;
 
         // 4. Read the rows (Label + Pixel)
         int label;
@@ -73,18 +95,34 @@ public:
             // Save the label as the FIRST element of the output vector.
             // The MnistLogicProblem will know that outputs[i][0] is the target class.
             // Resize to 1 just to hold the label (saves memory compared to 500)
-            (*this->outputs)[i].push_back(static_cast<E>(label));
+            std::vector<E> row_out;
+            row_out.push_back(static_cast<E>(label));
+            all_outputs_vec.push_back(row_out);
 
             // B. Read the Pixels (subsequent columns)
-            (*this->inputs)[i].resize(num_inputs_file);
+            std::vector<E> row_in(num_inputs_file);
             for (int j = 0; j < num_inputs_file; ++j) {
                 ifs >> pixel_val;
-                (*this->inputs)[i][j] = pixel_val;
+                row_in[j] = pixel_val;
             }
+            all_inputs_vec.push_back(row_in);
         }
 
         std::cout << "MNIST Data Loaded Successfully." << std::endl;
         ifs.close();
+
+        // Inizializza i vettori ATTIVI con la PRIMA BATCH (o tutto)
+        int init_size = this->num_instances; 
+        for(int i=0; i<init_size; i++) {
+            this->inputs->push_back(all_inputs_vec[i]);
+            this->outputs->push_back(all_outputs_vec[i]);
+        }
+
+        // Salva tutto nel Problema (Dobbiamo farlo dopo aver creato il problema in init_problem, 
+        // ma qui non esiste ancora.
+        // TRUCCO: Salviamo i dati full in membri della classe Initializer e li passiamo dopo.
+        this->full_inputs_store = all_inputs_vec;
+        this->full_outputs_store = all_outputs_vec;
     }
 
     /**
@@ -98,15 +136,25 @@ public:
      * @brief Initialize the MNIST Logic problem.
      */
     void init_problem() override {
-        this->problem = std::make_shared<MnistLogicProblem<E, G, F>>(
+
+        int training_instances = this->num_instances;
+        if (this->parameters->is_batch_training()) {
+            training_instances = this->parameters->get_batch_size();
+        }
+
+        auto mnist_problem = std::make_shared<MnistLogicProblem<E, G, F>>(
             this->parameters, 
             this->evaluator, 
             this->inputs,
             this->outputs, 
             this->constants, 
-            this->num_instances
+            training_instances
         );
         
+        // Passa il dataset completo al problema
+        mnist_problem->set_full_dataset(this->full_inputs_store, this->full_outputs_store);
+        
+        this->problem = mnist_problem;
         // Passiamo il parametro BITS_PER_CLASS al problema (opzionale, se lo rendiamo configurabile)
         // Per ora lo hardcodiamo o lo passiamo tramite un setter se necessario.
 

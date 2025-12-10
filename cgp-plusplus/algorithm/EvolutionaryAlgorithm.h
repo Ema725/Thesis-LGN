@@ -28,6 +28,7 @@
 #include <thread>
 #include <cmath>
 #include <mutex>
+#include <ostream>
 
 
 /// @brief Abstract base class to represent an evolutionary algorithm (EA) 
@@ -79,6 +80,8 @@ protected:
 	std::shared_ptr<Composite<E, G, F>> composite;
 	std::vector<Individual<G, F>> offsprings;
 
+	std::shared_ptr<std::ostream> stat_stream;
+
 
 	void report(int generation_number);
 	void check_ideal(int generation_number);
@@ -100,6 +103,9 @@ public:
 	virtual const std::string& get_name() const;
 	int get_generation_number() const;
 	void set_generation_number(int p_generation_number);
+	void set_output_stream(std::shared_ptr<std::ostream> stream) {
+        this->stat_stream = stream;
+    }
 
 };
 

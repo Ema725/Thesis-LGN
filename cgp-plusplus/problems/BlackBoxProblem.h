@@ -70,6 +70,10 @@ public:
 	virtual void evaluate_individual(
 				std::shared_ptr<Individual<G, F>> individual);
 
+	virtual void load_batch(int start_index, int batch_size) {
+        // Override nelle classi derivate (es. MnistLogicProblem)
+    }
+
 	virtual BlackBoxProblem<E, G, F>* clone() = 0;
 	virtual F evaluate(std::shared_ptr<std::vector<E>> outputs_real,
 			std::shared_ptr<std::vector<E>> outputs_individual) = 0;

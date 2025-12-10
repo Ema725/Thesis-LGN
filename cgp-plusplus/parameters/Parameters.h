@@ -104,6 +104,12 @@ private:
 	int num_parents;
 	int fitness_function;
 
+	// <<< BATCH TRAINING PARAMETERS >>>
+    bool batch_training;
+    int file_size;
+    int batch_size;
+    int batch_gen;
+
 	bool neutral_genetic_drift;
 	bool fixed_layers;
 
@@ -204,6 +210,18 @@ public:
 
 	bool is_fixed_layers() const;
     void set_fixed_layers(bool p_fixed_layers); //MODIFICATO
+
+	bool is_batch_training() const;
+    void set_batch_training(bool p_batch_training);
+
+    int get_file_size() const;
+    void set_file_size(int p_file_size);
+
+    int get_batch_size() const;
+    void set_batch_size(int p_batch_size);
+
+    int get_batch_gen() const;
+    void set_batch_gen(int p_batch_gen);
 
 	bool is_minimizing_fitness() const;
 	void set_minimizing_fitness(bool p_miniming_fitness);

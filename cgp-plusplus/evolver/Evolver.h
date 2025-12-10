@@ -137,6 +137,8 @@ void Evolver<E, G, F>::resume(std::string &checkpoint) {
 		std::string statfile = this->statfile_name();
 		ofs = std::make_shared<std::ofstream>(statfile,
 				std::ofstream::out | std::fstream::trunc);
+		
+		this->algorithm->set_output_stream(ofs);
 	}
 
 	this->execute_job(1, ofs);
@@ -160,6 +162,8 @@ void Evolver<E, G, F>::run() {
 		std::string statfile = this->statfile_name();
 		ofs = std::make_shared<std::ofstream>(statfile,
 				std::ofstream::out | std::fstream::trunc);
+		
+		this->algorithm->set_output_stream(ofs);
 	}
 
 	// Run the evolutionary algorithm for each job

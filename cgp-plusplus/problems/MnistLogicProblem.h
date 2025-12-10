@@ -13,6 +13,9 @@ private:
     int bits_per_class;
     const int NUM_CLASSES = 10;
 
+    std::vector<std::vector<E>> full_inputs;
+    std::vector<std::vector<E>> full_outputs;
+
 public:
     MnistLogicProblem(std::shared_ptr<Parameters> p_parameters,
                       std::shared_ptr<Evaluator<E, G, F>> p_evaluator,
@@ -30,6 +33,37 @@ public:
             throw std::invalid_argument("Total outputs must be a multiple of 10 (classes)!");
         }
         this->bits_per_class = this->parameters->get_num_outputs() / NUM_CLASSES;
+    }
+
+    // <<< METODO PER CARICARE IL DATASET COMPLETO >>>
+    void set_full_dataset(const std::vector<std::vector<E>>& all_inputs, 
+                          const std::vector<std::vector<E>>& all_outputs) {
+        this->full_inputs = all_inputs;
+        this->full_outputs = all_outputs;
+    }
+
+    // <<< METODO PER CAMBIARE BATCH (Finestra attiva) >>>
+    void load_batch(int start_index, int batch_size) {
+        // Verifica limiti
+        if (start_index + batch_size > (int)this->full_inputs.size()) {
+            // Se sbordiamo (es. ultima batch parziale), tronchiamo o torniamo all'inizio
+            // Qui assumiamo file_size % batch_size == 0 come da specifica
+            start_index = 0; 
+        }
+
+        // Aggiorna i vettori attivi (usati da Evaluator ed evaluate())
+        // Nota: 'this->inputs' è uno shared_ptr, ma possiamo modificarne il contenuto
+        this->inputs->clear();
+        this->outputs->clear();
+        
+        // Copia la finestra
+        for(int i = 0; i < batch_size; i++) {
+            this->inputs->push_back(this->full_inputs[start_index + i]);
+            this->outputs->push_back(this->full_outputs[start_index + i]);
+        }
+        
+        // Aggiorna num_instances per coerenza
+        this->num_instances = batch_size;
     }
 
     ~MnistLogicProblem() = default;
@@ -152,7 +186,7 @@ public:
                     return 50.0 + (max_bits_on - prediction_strength);
                 }
 
-            case 1: //minfitness = 0
+            case 1: //minfitness = 0 è meglio case 0
                 if (best_class == true_label) {
                     return 0.0;
                 } else {
@@ -160,13 +194,13 @@ public:
                     return 50.0 + (max_bits_on - prediction_strength);
                 }
 
-            case 2: //minfitness = -50 * nclasses
+            case 2: //minfitness = -50 * nclasses bocciata
                 return (max_incorrect_bits - prediction_strength);
             
-            case 3: //minfitness = -50 * nclasses
+            case 3: //minfitness = -50 * nclasses bocciata
                 return static_cast<F>(sum_incorrect_bits - prediction_strength);
             
-            case 4: //minfitness = 0
+            case 4: //minfitness = 0 è meglio case 5
             if (best_class == true_label) {
                 return 0.0;
             } else {
@@ -179,6 +213,21 @@ public:
             } else {
                 return 50.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
             }
+
+            case 6: //minfitness = -500
+            if (best_class == true_label) {
+                return 0.0 - (prediction_strength - max_incorrect_bits);
+            } else {
+                return 50.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
+            }
+
+            case 7: //minfitness = -50 * nclasses
+                if (best_class == true_label) {
+                    return 0.0 - (prediction_strength - max_incorrect_bits);
+                } else {
+                    // Penalizza in base alla distanza dal vincitore attuale
+                    return 50.0 + (max_bits_on - prediction_strength);
+                }
 
             default:
                 throw std::invalid_argument("Unknown fitness_function type!");

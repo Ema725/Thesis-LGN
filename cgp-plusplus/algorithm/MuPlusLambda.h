@@ -97,9 +97,69 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
 	this->best_fitness = this->fitness->worst_value();
 	this->is_ideal = false;
 
+	// <<< STATO PER IL BATCH TRACKING >>>
+    double current_batch_min_acc = 0.0; // Accuracy all'inizio della batch
+    int current_batch_idx = 0;          // Indice batch corrente
+    bool first_eval_of_batch = true;    // Flag per catturare il min
+
 	while (this->generation_number <= this->max_generations && !this->is_ideal) {
 
+		// <<< INIZIO NUOVA LOGICA BATCH >>>
+        bool batch_switched = false;
 
+		if (this->parameters->is_batch_training() && 
+            this->generation_number > 0 && 
+            this->generation_number % this->parameters->get_batch_gen() == 0) {
+				
+			// A. FINE BATCH PRECEDENTE: Calcola Max Accuracy e Scrivi Report
+            // Recupera il miglior individuo corrente (che è il risultato finale di questa batch)
+            this->population->sort(); // Assicuriamoci che sia ordinata
+            auto best_ind_end = this->population->get_individual(0);
+
+			auto problem = this->composite->get_problem();
+            int total_samples = problem->get_num_instances(); // Ritorna 2000 se hai fatto la mod precedente
+            int hits_end = problem->validate_individual(best_ind_end);
+
+			double batch_max_acc = (double)hits_end / total_samples * 100.0;
+
+            // Scrivi nel file .stat se disponibile
+            if (this->stat_stream) {
+                *this->stat_stream << "Batch " << current_batch_idx 
+                                   << " :: Min Accuracy: " << current_batch_min_acc << "%"
+                                   << " :: Max Accuracy: " << batch_max_acc << "%" 
+                                   << std::endl;
+                this->stat_stream->flush();
+            }
+
+            // 1. Calcola l'indice della nuova batch
+            int file_size = this->parameters->get_file_size();
+            int batch_size = this->parameters->get_batch_size();
+            int batch_gen = this->parameters->get_batch_gen();
+            
+            int total_batches = file_size / batch_size;
+            int batch_idx = (this->generation_number / batch_gen) % total_batches;
+            int start_idx = batch_idx * batch_size;
+
+            std::cout << ">>> BATCH SWITCH at Gen " << this->generation_number 
+                      << " -> Loading Batch " << batch_idx 
+                      << " (Range: " << start_idx << "-" << start_idx + batch_size << ")" << std::endl;
+					  
+
+			current_batch_idx = batch_idx;
+            // 2. Carica la nuova batch nel problema
+            problem->load_batch(start_idx, batch_size);
+
+            // 3. Resetta la fitness di TUTTA la popolazione (Genitori inclusi)
+            // Poiché i dati sono cambiati, la fitness calcolata prima non è più valida.
+            // Dobbiamo costringere l'algoritmo a ricalcolare quanto sono bravi i genitori sui nuovi dati.
+            for (int i = 0; i < this->population->size(); i++) {
+                this->population->get_individual(i)->set_evaluated(false);
+            }
+            
+            batch_switched = true;
+			first_eval_of_batch = true;
+        }
+		
 		// Trigger the evaluation process
 		this->evaluate();
 
@@ -109,9 +169,22 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
 
 		// Sort population for the selection process
 		this->population->sort();
+		auto best_ind_current = this->population->get_individual(0);
 
 		// Obtain best fitness from the sorted population
 		this->best_fitness = this->population->get_individual(0)->get_fitness();
+
+		// <<< CATTURA MIN ACCURACY (INIZIO BATCH) >>>
+        // Se siamo alla prima generazione assoluta (Gen 1) O appena dopo uno switch
+        if (this->generation_number == 1 || first_eval_of_batch) {
+            auto problem = this->composite->get_problem();
+            int total_samples = problem->get_num_instances();
+            int hits_start = problem->validate_individual(best_ind_current);
+            
+            current_batch_min_acc = (double)hits_start / total_samples * 100.0;
+            
+            first_eval_of_batch = false; // Fatto, non ricalcolare fino al prossimo switch
+        }
 
 		// Trigger reporting intermediate result results
 		this->report(this->generation_number);

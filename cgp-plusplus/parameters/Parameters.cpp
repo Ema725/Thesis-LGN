@@ -46,6 +46,11 @@ Parameters::Parameters() {
 	ideal_fitness = 0;
 	fitness_function = 0;
 
+	batch_training = false;
+    file_size = 0;
+    batch_size = 0;
+    batch_gen = 0;
+
 	neutral_genetic_drift = true;
 	fixed_layers = false;
 
@@ -56,7 +61,7 @@ Parameters::Parameters() {
 	report_simple = true;
 	report_interval = 1;
 	print_configuration = false;
-	write_statfile = false;
+	write_statfile = true;
 	checkpointing = false;
 
 	simple_report_type = BEST_FITNESS_OF_RUN;
@@ -350,6 +355,18 @@ int Parameters::get_fitness_function() const {
 void Parameters::set_fitness_function(int p_fitness_function) {
     this->fitness_function = p_fitness_function;
 }
+
+bool Parameters::is_batch_training() const { return batch_training; }
+void Parameters::set_batch_training(bool p_batch_training) { batch_training = p_batch_training; }
+
+int Parameters::get_file_size() const { return file_size; }
+void Parameters::set_file_size(int p_file_size) { file_size = p_file_size; }
+
+int Parameters::get_batch_size() const { return batch_size; }
+void Parameters::set_batch_size(int p_batch_size) { batch_size = p_batch_size; }
+
+int Parameters::get_batch_gen() const { return batch_gen; }
+void Parameters::set_batch_gen(int p_batch_gen) { batch_gen = p_batch_gen; }
 
 int Parameters::get_num_jobs() const {
 	return this->num_jobs;

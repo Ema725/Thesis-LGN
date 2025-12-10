@@ -1,5 +1,5 @@
-algorithm 0
-levels_back 20000
+algorithm 1
+levels_back 4000
 
 num_jobs 1
 num_function_nodes 20000
@@ -11,10 +11,15 @@ num_functions 8
 max_arity 2
 num_parents 1
 num_offspring 8
-fitness_function 1
+fitness_function 0
+
+batch_training 0
+file_size 2000
+batch_size 50
+batch_gen 100
 
 max_fitness_evaluations 800000
-ideal_fitness 0.01
+ideal_fitness -500
 minimizing_fitness 1
 
 crossover_type 0
@@ -31,7 +36,7 @@ inversion_rate 0.05
 max_duplication_depth 30
 max_inversion_depth 10
 
-fixed_layers 0
+fixed_layers 1
 neutral_genetic_drift 1
 simple_report_type 0
 print_configuration 1
@@ -45,7 +50,7 @@ global_seed 7847231234
 report_during_job 1
 report_after_job 1
 report_simple 0
-report_interval	1000
+report_interval	100
 
 checkpointing 0
 checkpoint_modulo 250000
