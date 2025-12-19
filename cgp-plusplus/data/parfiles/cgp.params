@@ -1,5 +1,5 @@
 algorithm 1
-levels_back 4000
+levels_back 20000
 
 num_jobs 1
 num_function_nodes 20000
@@ -9,8 +9,8 @@ constant_type 0
 num_outputs 500
 num_functions 8
 max_arity 2
-num_parents 1
-num_offspring 8
+num_parents 5
+num_offspring 35
 fitness_function 0
 
 batch_training 0
@@ -18,8 +18,8 @@ file_size 2000
 batch_size 50
 batch_gen 100
 
-max_fitness_evaluations 800000
-ideal_fitness -500
+max_fitness_evaluations 1200000
+ideal_fitness 0
 minimizing_fitness 1
 
 crossover_type 0
@@ -30,13 +30,13 @@ probabilistic_point_mutation 1
 single_active_gene_mutation 0
 inversion_mutation 0
 duplication_mutation 1
-point_mutation_rate 0.1	
+point_mutation_rate 0.005	
 duplication_rate 0.05
 inversion_rate 0.05
 max_duplication_depth 30
 max_inversion_depth 10
 
-fixed_layers 1
+fixed_layers 0
 neutral_genetic_drift 1
 simple_report_type 0
 print_configuration 1
