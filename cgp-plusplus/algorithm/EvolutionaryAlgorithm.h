@@ -98,6 +98,9 @@ protected:
 public:
 	EvolutionaryAlgorithm(std::shared_ptr<Composite<E, G, F>> p_composite);
 	virtual ~EvolutionaryAlgorithm() = default;
+	std::shared_ptr<AbstractPopulation<G, F>> get_population() {
+            return this->population;
+        }
 	void reset();
 	virtual std::pair<int, F> evolve()=0;
 	virtual const std::string& get_name() const;

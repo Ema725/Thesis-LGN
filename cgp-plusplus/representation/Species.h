@@ -120,17 +120,25 @@ int Species<G>::calc_genome_size() {
 /// @return minimum gene value
 template<class G>
 int Species<G>::min_gene(int position) {
-int max_arity = parameters->get_max_arity();
+    int max_arity  = parameters->get_max_arity();
     int num_inputs = parameters->get_num_inputs();
-    int gene_type = position % (max_arity + 1);
 
-    // Se è un gene Funzione (opcode), parte sempre da 0
-    if (gene_type == 0) {
+    int phenotype = this->decode_genotype_at(position);
+
+    // --- OUTPUT GENE ---
+    // Un output può connettersi a qualunque segnale valido (input o nodo),
+    // quindi il minimo è sempre 0.
+    if (phenotype == this->OUTPUT_GENE) {
         return 0;
     }
 
-    // --- SEZIONE CONNESSIONI (Input Genes) ---
+    // --- FUNCTION GENE ---
+    // Gli opcode partono sempre da 0.
+    if (phenotype == this->FUNCTION_GENE) {
+        return 0;
+    }
 
+    // --- CONNECTION GENE (solo nella sezione nodi) ---
     // Calcolo indice assoluto del nodo corrente (es. nodo 10, 11...)
     int node_idx_relative = position / (max_arity + 1); // 0, 1, 2... tra i nodi funzione
     int node_idx_absolute = node_idx_relative + num_inputs;
@@ -154,12 +162,11 @@ int max_arity = parameters->get_max_arity();
     else {
         int levels_back = parameters->get_levels_back();
         int min_val = node_idx_absolute - levels_back;
-        if (min_val < 0) {
-            return 0;
-        }
+        if (min_val < 0) return 0;
         return min_val;
     }
 }
+
 
 /// @brief Returns the maximum gene for the given position.
 /// @details Depending on the type of the gene at the specified position. 
@@ -167,18 +174,25 @@ int max_arity = parameters->get_max_arity();
 /// @return maximum gene value
 template<class G>
 int Species<G>::max_gene(int position) {
-	int max_arity = parameters->get_max_arity();
-    int num_inputs = parameters->get_num_inputs();
+    int max_arity     = parameters->get_max_arity();
+    int num_inputs    = parameters->get_num_inputs();
     int num_functions = parameters->get_num_functions();
-    int gene_type = position % (max_arity + 1);
+    int num_nodes     = parameters->get_num_function_nodes(); // o this->num_nodes
 
-    // Se è un gene Funzione, ritorna l'indice massimo delle funzioni
-    if (gene_type == 0) {
+    int phenotype = this->decode_genotype_at(position);
+
+    // --- OUTPUT GENE ---
+    // Un output può puntare a qualunque segnale valido: [0 .. num_inputs+num_nodes-1]
+    if (phenotype == this->OUTPUT_GENE) {
+        return (num_inputs + num_nodes - 1);
+    }
+
+    // --- FUNCTION GENE ---
+    if (phenotype == this->FUNCTION_GENE) {
         return num_functions - 1;
     }
 
-    // --- SEZIONE CONNESSIONI (Input Genes) ---
-
+    // --- CONNECTION GENE (solo nella sezione nodi) ---
     int node_idx_relative = position / (max_arity + 1);
     int node_idx_absolute = node_idx_relative + num_inputs;
 
@@ -193,7 +207,6 @@ int Species<G>::max_gene(int position) {
         } else {
             // Altrimenti ci connettiamo alla fine del layer precedente
             // End index layer precedente = NumInputs + (LayerCorrente * Width) - 1
-            // Esempio: Se sono in Layer 1, voglio connettermi fino a (NumInputs + 1*Width - 1)
             int prev_layer_end_idx = num_inputs + (current_layer * width) - 1;
             return prev_layer_end_idx;
         }
@@ -204,6 +217,7 @@ int Species<G>::max_gene(int position) {
         return node_idx_absolute - 1;
     }
 }
+
 
 /// @brief Decodes the genotype at a specified position.
 /// @param position specified position

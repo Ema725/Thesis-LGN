@@ -23,6 +23,8 @@
 #include "template/template_types.h"
 #include "validation/Validation.h"
 #include "evolver/Evolver.h"
+#include "composite/Composite.h"
+#include "checkpoint/Checkpoint.h"
 #include "initializer/SymbolicRegressionInitializer.h"
 #include "initializer/LogicSynthesisInitializer.h"
 #include "initializer/BlackBoxInitializer.h"

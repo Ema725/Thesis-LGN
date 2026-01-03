@@ -52,7 +52,7 @@ private:
 
 	bool evaluate_expression = true;
 
-	int gene_at(std::shared_ptr<G[]> genome, int position);
+	
 
 public:
 	Evaluator(std::shared_ptr<Parameters> p_parameters,
@@ -88,6 +88,8 @@ public:
 	void determine_active_nodes(std::shared_ptr<Individual<G, F>> individual);
 
 	void clear_maps();
+
+	int gene_at(std::shared_ptr<G[]> genome, int position);
 };
 
 template<class E, class G, class F>
