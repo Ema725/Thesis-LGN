@@ -101,6 +101,46 @@ E FunctionsBoolean<E>::call_function(E inputs[], int function) {
 		result = ~(inputs[0] ^ inputs[1]);
 		break;
 
+	case 8:
+        // A implies B -> (NOT A) OR B
+        result = ~inputs[0] | inputs[1];
+        break;
+
+    case 9:
+        // B implies A -> A OR (NOT B)
+        result = inputs[0] | ~inputs[1];
+        break;
+
+    case 10:
+        // NOT (A implies B) -> A AND (NOT B)
+        result = inputs[0] & ~inputs[1];
+        break;
+
+    case 11:
+        // NOT (B implies A) -> (NOT A) AND B
+        result = ~inputs[0] & inputs[1];
+        break;
+	
+	case 12:
+		// BUFFER B
+		result = inputs[1];
+		break;
+	
+	case 13:
+		// True
+		result = static_cast<E>(-1); // all bits set to 1
+		break;
+	
+	case 14:
+		// False
+		result = static_cast<E>(0); // all bits set to 0
+		break;
+	
+	case 15:
+		// NOT B
+		result = ~inputs[1];
+		break;
+
 	default:
 		throw std::invalid_argument("Illegal function number!");
 
@@ -149,6 +189,38 @@ std::string FunctionsBoolean<E>::FunctionsBoolean::function_name(int function) {
 	case 7:
 		name = "XNOR";
 		break;
+	
+	case 8:
+		name = "IMPLIES_A_B";
+		break;
+
+	case 9:
+		name = "IMPLIES_B_A";
+		break;
+
+	case 10:
+		name = "NOT_IMPLIES_A_B";
+		break;
+
+	case 11:
+		name = "NOT_IMPLIES_B_A";
+		break;
+
+	case 12:
+		name = "BUFFER_B";
+		break;
+
+	case 13:
+		name = "TRUE";
+		break;
+
+	case 14:
+		name = "FALSE";
+		break;
+
+	case 15:
+		name = "NOT_B";
+		break;
 
 	default:
 		throw std::invalid_argument("Illegal function number!");
@@ -173,10 +245,18 @@ int FunctionsBoolean<E>::arity_of(int function) {
         case 3: // NOR
         case 6: // XOR
         case 7: // XNOR
+		case 8: // IMPLIES_A_B
+		case 9: // IMPLIES_B_A
+		case 10: // NOT_IMPLIES_A_B
+		case 11: // NOT_IMPLIES_B_A
             return 2;
         
         case 4: // BUF
         case 5: // NOT
+		case 12: // BUFFER_B
+		case 13: // TRUE
+		case 14: // FALSE
+		case 15: // NOT_B
             return 1;
             
         default:

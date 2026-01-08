@@ -226,17 +226,17 @@ void Evolver<E, G, F>::execute_job(int job,
 			this->population->sort();
             auto best_ind = this->population->get_individual(0);
 
-            // 2. Calcola l'accuratezza finale
+            //  Calculates accuracy
             auto problem = this->composite->get_problem();
             int hits = problem->validate_individual(best_ind);
             int total_samples = problem->get_num_instances();
 
-            // 3. Costruisci la stringa di report
+			//  Report results
             ss << "Job # " << job << " :: Evaluations: " << result.first
                     << " :: Best Fitness: " << result.second
                     << " :: Runtime (s): " << duration.count();
 
-            // 4. Aggiungi l'accuratezza se disponibile
+            //  Add accuracy if available
             if (hits != -1) {
                 double accuracy = (double)hits / total_samples * 100.0;
                 ss << " :: Accuracy: " << hits << "/" << total_samples 

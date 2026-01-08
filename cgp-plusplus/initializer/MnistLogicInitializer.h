@@ -55,12 +55,11 @@ public:
                   << ", Inputs: " << num_inputs_file 
                   << ", Classes: " << num_classes_file << std::endl;
 
-        // Verifica consistenza parametri batch
+        // Verififies parameters consistency
         if (this->parameters->is_batch_training()) {
             if (num_samples_file != this->parameters->get_file_size()) {
                 std::cout << "WARNING: file_size in params differs from file header!" << std::endl;
             }
-            // La "finestra attiva" sarà grande quanto una batch
             this->num_instances = this->parameters->get_batch_size();
         } else {
             this->num_instances = num_samples_file;
@@ -74,20 +73,20 @@ public:
         int total_outputs = num_classes_file * BITS_PER_CLASS;
         this->parameters->set_num_outputs(total_outputs);
 
-        // Alloca i vettori ATTIVI (quelli che userà l'Evaluator)
+        // Allocates active input/output vectors
         this->inputs = std::make_shared<std::vector<std::vector<E>>>();
         this->outputs = std::make_shared<std::vector<std::vector<E>>>();
 
-        // Vettori temporanei per TUTTI i dati
+        // Temporary storage for ALL data
         std::vector<std::vector<E>> all_inputs_vec;
         std::vector<std::vector<E>> all_outputs_vec;
 
-        // 4. Read the rows (Label + Pixel)
+        // Read the rows (Label + Pixel)
         int label;
         E pixel_val;
 
         for (int i = 0; i < this->num_instances; ++i) {
-            // A. Read the Label (first column)
+            // Read the Label (first column)
             if (!(ifs >> label)) {
                 throw std::runtime_error("Error reading label at line " + std::to_string(i + 1));
             }
@@ -99,7 +98,7 @@ public:
             row_out.push_back(static_cast<E>(label));
             all_outputs_vec.push_back(row_out);
 
-            // B. Read the Pixels (subsequent columns)
+            //  Read the Pixels (subsequent columns)
             std::vector<E> row_in(num_inputs_file);
             for (int j = 0; j < num_inputs_file; ++j) {
                 ifs >> pixel_val;
@@ -111,16 +110,13 @@ public:
         std::cout << "MNIST Data Loaded Successfully." << std::endl;
         ifs.close();
 
-        // Inizializza i vettori ATTIVI con la PRIMA BATCH (o tutto)
+        // Initialize the active vectors with the first batch (or all)
         int init_size = this->num_instances; 
         for(int i=0; i<init_size; i++) {
             this->inputs->push_back(all_inputs_vec[i]);
             this->outputs->push_back(all_outputs_vec[i]);
         }
 
-        // Salva tutto nel Problema (Dobbiamo farlo dopo aver creato il problema in init_problem, 
-        // ma qui non esiste ancora.
-        // TRUCCO: Salviamo i dati full in membri della classe Initializer e li passiamo dopo.
         this->full_inputs_store = all_inputs_vec;
         this->full_outputs_store = all_outputs_vec;
     }
@@ -151,12 +147,9 @@ public:
             training_instances
         );
         
-        // Passa il dataset completo al problema
         mnist_problem->set_full_dataset(this->full_inputs_store, this->full_outputs_store);
         
         this->problem = mnist_problem;
-        // Passiamo il parametro BITS_PER_CLASS al problema (opzionale, se lo rendiamo configurabile)
-        // Per ora lo hardcodiamo o lo passiamo tramite un setter se necessario.
 
         // we want to minimize the number of errors (maximize correct classifications)
         this->parameters->set_minimizing_fitness(true);

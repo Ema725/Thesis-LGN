@@ -97,10 +97,10 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
 	this->best_fitness = this->fitness->worst_value();
 	this->is_ideal = false;
 
-	// <<< STATO PER IL BATCH TRACKING >>>
-    double current_batch_min_acc = 0.0; // Accuracy all'inizio della batch
-    int current_batch_idx = 0;          // Indice batch corrente
-    bool first_eval_of_batch = true;    // Flag per catturare il min
+	// <<< BATCH TRACKING >>>
+    double current_batch_min_acc = 0.0; // Accuracy at the beginning of the batch
+    int current_batch_idx = 0;          // Index for current batch
+    bool first_eval_of_batch = true;    // Flag for the first evaluation of the batch
 
 	while (this->generation_number <= this->max_generations && !this->is_ideal) {
 

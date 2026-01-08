@@ -27,42 +27,37 @@ public:
         
         this->name = "MNIST Logic Problem";
         
-        // Calcoliamo i bit per classe dinamicamente dal numero totale di output
-        // Es: 500 output / 10 classi = 50 bit per classe
+        // Es: 500 output / 10 classes = 50 bit per class
         if (this->parameters->get_num_outputs() % NUM_CLASSES != 0) {
             throw std::invalid_argument("Total outputs must be a multiple of 10 (classes)!");
         }
         this->bits_per_class = this->parameters->get_num_outputs() / NUM_CLASSES;
     }
 
-    // <<< METODO PER CARICARE IL DATASET COMPLETO >>>
+    // Upload full dataset
     void set_full_dataset(const std::vector<std::vector<E>>& all_inputs, 
                           const std::vector<std::vector<E>>& all_outputs) {
         this->full_inputs = all_inputs;
         this->full_outputs = all_outputs;
     }
 
-    // <<< METODO PER CAMBIARE BATCH (Finestra attiva) >>>
+    // change batch
     void load_batch(int start_index, int batch_size) {
-        // Verifica limiti
+        // Verifies limits
         if (start_index + batch_size > (int)this->full_inputs.size()) {
-            // Se sbordiamo (es. ultima batch parziale), tronchiamo o torniamo all'inizio
-            // Qui assumiamo file_size % batch_size == 0 come da specifica
             start_index = 0; 
         }
 
-        // Aggiorna i vettori attivi (usati da Evaluator ed evaluate())
-        // Nota: 'this->inputs' è uno shared_ptr, ma possiamo modificarne il contenuto
+        // updates active vectors
         this->inputs->clear();
         this->outputs->clear();
         
-        // Copia la finestra
+        // Copy the window
         for(int i = 0; i < batch_size; i++) {
             this->inputs->push_back(this->full_inputs[start_index + i]);
             this->outputs->push_back(this->full_outputs[start_index + i]);
         }
         
-        // Aggiorna num_instances per coerenza
         this->num_instances = batch_size;
     }
 
@@ -92,10 +87,10 @@ public:
 
             outputs_ind->clear();
             
-            // Valuta l'individuo (senza lock mtx qui, siamo nel thread principale di report)
+            //evaluate
             this->evaluator->evaluate_iterative(individual, input_instance, outputs_ind);
 
-            // 2. Logica di Classificazione (Bit Counting)
+            // Classification logic (Bit Counting)
             int true_label = static_cast<int>(this->outputs->at(i)[0]);
             int best_class = -1;
             int max_bits_on = -1;
@@ -116,7 +111,6 @@ public:
                 }
             }
 
-            // 3. Incrementa Hits se corretto
             if (best_class == true_label) {
                 hits++;
             }
@@ -125,18 +119,18 @@ public:
     }
 
     /**
-     * @brief Valuta una singola predizione.
-     * @param outputs_real Contiene la LABEL vera come unico elemento (vedi Initializer).
-     * @param outputs_individual Contiene la stringa di bit prodotta dalla rete (es. 500 bit).
-     * @return 0.0 se la predizione è corretta, 1.0 se è errata (Minimizzazione).
+     * @brief Evaluates a single prediction.
+     * @param outputs_real Contains the true LABEL as the only element (see Initializer).
+     * @param outputs_individual Contains the bit string produced by the network (e.g., 500 bits).
+     * @return 0.0 if the prediction is correct, 1.0 if it is incorrect (Minimization).
      */
     F evaluate(std::shared_ptr<std::vector<E>> outputs_real,
                std::shared_ptr<std::vector<E>> outputs_individual) override {
-        
-        // 1. Recupera la vera etichetta (Salvata nell'elemento 0 dal nostro Initializer)
+
+        // 1. Retrieve the true label (Saved in element 0 by our Initializer)
         int true_label = static_cast<int>(outputs_real->at(0));
 
-        // 2. Logica di Bit-Counting (Population Count)
+        // 2. Classification logic (Bit Counting)
         int best_class = -1;
         int max_bits_on = -1;
         int prediction_strength = 0;
@@ -144,21 +138,20 @@ public:
         int sum_incorrect_bits = 0;
 
 
-        // Itera su ogni classe (0-9)
+        // Iterates for each class (0-9)
         for (int class_idx = 0; class_idx < NUM_CLASSES; ++class_idx) {
             int current_bits_on = 0;
             int start_idx = class_idx * this->bits_per_class;
 
-            // Conta i bit a '1' nel blocco dedicato a questa classe
+            // Count the '1' bits in the block dedicated to this class
             for (int bit = 0; bit < this->bits_per_class; ++bit) {
-                // Consideriamo qualsiasi valore != 0 come '1' logico (per sicurezza)
+                // Consider any non-zero value as a logical '1' (for safety)
                 if (outputs_individual->at(start_idx + bit) != 0) {
                     current_bits_on++;
                 }
             }
 
-            // ArgMax: Se questo blocco ha più '1' del precedente record, diventa il vincitore.
-            // Nota: In caso di pareggio, qui vince la classe con indice minore.
+            // Note: if there is a tie, the class with the smaller index wins.
             if (current_bits_on > max_bits_on) {
                 max_bits_on = current_bits_on;
                 best_class = class_idx;
@@ -166,7 +159,7 @@ public:
             if (class_idx == true_label) {
                 prediction_strength = current_bits_on;
             } else {
-                // Statistiche sulle classi sbagliate
+                // Statistics on incorrect classes
                 sum_incorrect_bits += current_bits_on;
                 if (current_bits_on > max_incorrect_bits) {
                     max_incorrect_bits = current_bits_on;
@@ -182,15 +175,13 @@ public:
                 if (best_class == true_label) {
                     return 0.0 - prediction_strength;
                 } else {
-                    // Penalizza in base alla distanza dal vincitore attuale
                     return 50.0 + (max_bits_on - prediction_strength);
                 }
 
-            case 1: //minfitness = 0 è meglio case 0
+            case 1: //minfitness = 0 maybe better case 0
                 if (best_class == true_label) {
                     return 0.0;
                 } else {
-                    // Penalizza in base alla distanza dal vincitore attuale
                     return 50.0 + (max_bits_on - prediction_strength);
                 }
 
@@ -200,7 +191,7 @@ public:
             case 3: //minfitness = -50 * nclasses bocciata
                 return static_cast<F>(sum_incorrect_bits - prediction_strength);
             
-            case 4: //minfitness = 0 è meglio case 5
+            case 4: //minfitness = 0 maybe better case 5
             if (best_class == true_label) {
                 return 0.0;
             } else {

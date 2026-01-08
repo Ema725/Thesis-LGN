@@ -143,22 +143,21 @@ int Species<G>::min_gene(int position) {
     int node_idx_relative = position / (max_arity + 1); // 0, 1, 2... tra i nodi funzione
     int node_idx_absolute = node_idx_relative + num_inputs;
 
-    // Caso 1: Layer Fissi attivi
+    // Case 1: Fixed layers
     if (parameters->is_fixed_layers()) {
         int width = parameters->get_levels_back(); // In questa modalità, levels_back è la larghezza
         int current_layer = node_idx_relative / width;
 
-        // Se siamo nel primo layer (Layer 0), ci connettiamo agli input del sistema
+        // if we are in the first layer, we can only connect to inputs
         if (current_layer == 0) {
-            return 0; // Primo input del sistema
+            return 0;
         } else {
-            // Altrimenti ci connettiamo all'inizio del layer precedente
-            // Start index layer precedente = NumInputs + (LayerCorrente - 1) * Width
+            // Else we connect to the previous layer
             int prev_layer_start_idx = num_inputs + ((current_layer - 1) * width);
             return prev_layer_start_idx;
         }
     }
-    // Caso 2: Comportamento Standard (CGP classico)
+    // Case 2: Standard behavior (Classic CGP)
     else {
         int levels_back = parameters->get_levels_back();
         int min_val = node_idx_absolute - levels_back;
@@ -196,24 +195,23 @@ int Species<G>::max_gene(int position) {
     int node_idx_relative = position / (max_arity + 1);
     int node_idx_absolute = node_idx_relative + num_inputs;
 
-    // Caso 1: Layer Fissi attivi
+    // Case 1: Fixed layers
     if (parameters->is_fixed_layers()) {
         int width = parameters->get_levels_back();
         int current_layer = node_idx_relative / width;
 
-        // Se siamo nel primo layer, il max è l'ultimo input del sistema
+        // If we are in the first layer, the max is the last input of the system
         if (current_layer == 0) {
             return num_inputs - 1;
         } else {
-            // Altrimenti ci connettiamo alla fine del layer precedente
-            // End index layer precedente = NumInputs + (LayerCorrente * Width) - 1
+            // Else we connect to the end of the previous layer
+            // End index previous layer = NumInputs + (CurrentLayer * Width) - 1
             int prev_layer_end_idx = num_inputs + (current_layer * width) - 1;
             return prev_layer_end_idx;
         }
     }
-    // Caso 2: Comportamento Standard (CGP classico)
+    // Case 2: Standard behavior (Classic CGP)
     else {
-        // Si può connettere fino al nodo immediatamente precedente
         return node_idx_absolute - 1;
     }
 }
