@@ -212,13 +212,12 @@ public:
                 return 50.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
             }
 
-            case 7: //minfitness = -50 * nclasses
-                if (best_class == true_label) {
-                    return 0.0 - (prediction_strength - max_incorrect_bits);
-                } else {
-                    // Penalizza in base alla distanza dal vincitore attuale
-                    return 50.0 + (max_bits_on - prediction_strength);
-                }
+            case 7: //minfitness = -500
+            if (best_class == true_label) {
+                return 0.0 - (prediction_strength - max_incorrect_bits);
+            } else {
+                return 100.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
+            }
 
             default:
                 throw std::invalid_argument("Unknown fitness_function type!");
