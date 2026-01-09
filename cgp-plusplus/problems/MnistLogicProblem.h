@@ -219,6 +219,21 @@ public:
                 return 100.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
             }
 
+            case 8: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
+            return sum_incorrect_bits + (50 - prediction_strength);
+
+            case 9: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
+            return sum_incorrect_bits + (50 - prediction_strength) * 2;
+
+            case 10: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
+            return sum_incorrect_bits + (50 - prediction_strength) * 5;
+
+            case 11: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
+            return sum_incorrect_bits + (50 - prediction_strength) * 10;
+
+            case 12: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
+            return sum_incorrect_bits + (50 - prediction_strength) * 100;
+
             default:
                 throw std::invalid_argument("Unknown fitness_function type!");
         }
