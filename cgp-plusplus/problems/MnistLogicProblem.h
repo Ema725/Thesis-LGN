@@ -93,7 +93,7 @@ public:
             // Classification logic (Bit Counting)
             int true_label = static_cast<int>(this->outputs->at(i)[0]);
             int best_class = -1;
-            int max_bits_on = -1;
+            int ones_prediction = -1;
 
             for (int class_idx = 0; class_idx < NUM_CLASSES; ++class_idx) {
                 int current_bits_on = 0;
@@ -105,8 +105,8 @@ public:
                     }
                 }
 
-                if (current_bits_on > max_bits_on) {
-                    max_bits_on = current_bits_on;
+                if (current_bits_on > ones_prediction) {
+                    ones_prediction = current_bits_on;
                     best_class = class_idx;
                 }
             }
@@ -132,9 +132,12 @@ public:
 
         // 2. Classification logic (Bit Counting)
         int best_class = -1;
-        int max_bits_on = -1;
-        int prediction_strength = 0;
+
+        int ones_prediction = -1;
+        //num bits at 1 for the ground truth class
+        int ones_ground_truth = 0;
         int max_incorrect_bits = 0;
+        //sum of bits at 1 for the incorrect classes
         int sum_incorrect_bits = 0;
 
 
@@ -152,12 +155,12 @@ public:
             }
 
             // Note: if there is a tie, the class with the smaller index wins.
-            if (current_bits_on > max_bits_on) {
-                max_bits_on = current_bits_on;
+            if (current_bits_on > ones_prediction) {
+                ones_prediction = current_bits_on;
                 best_class = class_idx;
             }
             if (class_idx == true_label) {
-                prediction_strength = current_bits_on;
+                ones_ground_truth = current_bits_on;
             } else {
                 // Statistics on incorrect classes
                 sum_incorrect_bits += current_bits_on;
@@ -173,66 +176,122 @@ public:
         switch (func_type) {
             case 0: //minfitness = -50 * nclasses
                 if (best_class == true_label) {
-                    return 0.0 - prediction_strength;
+                    return 0.0 - ones_ground_truth;
                 } else {
-                    return 50.0 + (max_bits_on - prediction_strength);
+                    return 50.0 + (ones_prediction - ones_ground_truth);
                 }
 
             case 1: //minfitness = 0 maybe better case 0
                 if (best_class == true_label) {
                     return 0.0;
                 } else {
-                    return 50.0 + (max_bits_on - prediction_strength);
+                    return 50.0 + (ones_prediction - ones_ground_truth);
                 }
 
             case 2: //minfitness = -50 * nclasses bocciata
-                return (max_incorrect_bits - prediction_strength);
+                return (max_incorrect_bits - ones_ground_truth);
             
             case 3: //minfitness = -50 * nclasses bocciata
-                return static_cast<F>(sum_incorrect_bits - prediction_strength);
+                return static_cast<F>(sum_incorrect_bits - ones_ground_truth);
             
             case 4: //minfitness = 0 maybe better case 5
             if (best_class == true_label) {
                 return 0.0;
             } else {
-                return 50.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.1;
+                return 50.0 + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.1;
             }
 
             case 5: //minfitness = 0
             if (best_class == true_label) {
                 return 0.0;
             } else {
-                return 50.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
+                return 50.0 + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.05;
             }
 
             case 6: //minfitness = -500
             if (best_class == true_label) {
-                return 0.0 - (prediction_strength - max_incorrect_bits);
+                return 0.0 - (ones_ground_truth - max_incorrect_bits);
             } else {
-                return 50.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
+                return 50.0 + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.05;
             }
 
-            case 7: //minfitness = -500
+            case 7:
             if (best_class == true_label) {
-                return 0.0 - (prediction_strength - max_incorrect_bits);
+                return 0.0;
             } else {
-                return 100.0 + (max_bits_on - prediction_strength) + (sum_incorrect_bits) * 0.05;
+                return (50 - ones_ground_truth) * 2 + (sum_incorrect_bits);
             }
 
             case 8: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - prediction_strength);
+            return sum_incorrect_bits + (50 - ones_ground_truth);
 
             case 9: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - prediction_strength) * 2;
+            return sum_incorrect_bits + (50 - ones_ground_truth) * 2;
 
             case 10: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - prediction_strength) * 5;
+            return sum_incorrect_bits + (50 - ones_ground_truth) * 5;
 
             case 11: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - prediction_strength) * 10;
+            return sum_incorrect_bits + (50 - ones_ground_truth) * 10;
 
             case 12: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - prediction_strength) * 100;
+            return sum_incorrect_bits + (50 - ones_ground_truth) * 100;
+
+            case 13: //9 mod
+            if (best_class == true_label) {
+                return (50 - ones_ground_truth) + (sum_incorrect_bits) * 0.5;
+            } else {
+                return (50 - ones_ground_truth) * 2 + (sum_incorrect_bits);
+            }
+
+            case 14: //10 mod
+            if (best_class == true_label) {
+                return ((50 - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.5;
+            } else {
+                return (50 - ones_ground_truth) * 5 + (sum_incorrect_bits);
+            }
+
+            case 15: //10 mod 2
+            if (best_class == true_label) {
+                return ((50 - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.75;
+            } else {
+                return (50 - ones_ground_truth) * 5 + (sum_incorrect_bits);
+            }
+
+            case 16: //10 mod 3
+            if (best_class == true_label) {
+                return ((50 - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.25;
+            } else {
+                return (50 - ones_ground_truth) * 5 + (sum_incorrect_bits);
+            }
+
+            case 17: //11 mod
+            if (best_class == true_label) {
+                return ((50 - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.5;
+            } else {
+                return (50 - ones_ground_truth) * 10 + (sum_incorrect_bits);
+            }
+
+            case 18: //11 mod 2
+            if (best_class == true_label) {
+                return ((50 - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.75;
+            } else {
+                return (50 - ones_ground_truth) * 10 + (sum_incorrect_bits);
+            }
+
+            case 19: //11 mod 3
+            if (best_class == true_label) {
+                return ((50 - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.25;
+            } else {
+                return (50 - ones_ground_truth) * 10 + (sum_incorrect_bits);
+            }
+
+            case 20: //12 mod
+            if (best_class == true_label) {
+                return ((50 - ones_ground_truth) * 100 + (sum_incorrect_bits)) * 0.5;
+            } else {
+                return (50 - ones_ground_truth) * 100 + (sum_incorrect_bits);
+            }
 
             default:
                 throw std::invalid_argument("Unknown fitness_function type!");
