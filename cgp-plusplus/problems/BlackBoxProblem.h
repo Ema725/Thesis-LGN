@@ -139,34 +139,35 @@ BlackBoxProblem<E, G, F>::BlackBoxProblem(
 		std::shared_ptr<Evaluator<E, G, F>> p_evaluator,
 		std::shared_ptr<std::vector<std::vector<E>>> p_inputs,
 		std::shared_ptr<std::vector<std::vector<E>>> p_outputs,
-		std::shared_ptr<std::vector<E>> p_constants, int p_num_instances) :
-		BlackBoxProblem<E, G, F>(p_parameters, p_evaluator, p_constants,
-				p_num_instances) {
+		std::shared_ptr<std::vector<E>> p_constants, int p_num_instances) {
 
+    // 1. Validation
+	if (p_parameters != nullptr && p_evaluator != nullptr && p_constants != nullptr) {
+		parameters = p_parameters;
+		evaluator = p_evaluator;
+		constants = p_constants;
+	} else {
+		throw std::invalid_argument("Nullpointer exception in problem class!");
+	}
 
 	if (p_inputs == nullptr || p_outputs == nullptr) {
-		throw std::invalid_argument(
-				"Nullpointer exception in BlackBoxProblem class!");
+		throw std::invalid_argument("Nullpointer exception in BlackBoxProblem class (inputs/outputs)!");
 	}
 
-	if (p_inputs->size() == 0 || p_outputs->size() == 0) {
-		throw std::invalid_argument("Empty vector in BlackBoxProblem class!");
-	}
+    // 2. Member Initialization
+	num_variables = parameters->get_num_variables();
+	num_constants = parameters->get_num_constants();
+	num_inputs = parameters->get_num_inputs();
+	num_outputs = parameters->get_num_outputs();
+	num_instances = p_num_instances;
 
-	E value;
+    // 3. Pointer Assignment (Zero-Copy)
+    // Invece di allocare nuovi vettori e copiare i dati, usiamo direttamente i puntatori condivisi.
+	this->inputs = p_inputs;
+	this->outputs = p_outputs;
 
-	for (int i = 0; i < this->num_instances; i++) {
-		for (int j = 0; j < this->num_variables; j++) {
-			value = (*p_inputs)[i][j];
-			this->inputs->at(i).push_back(value);
-		}
-
-		for (int j = 0; j < this->num_outputs; j++) {
-			value = (*p_outputs)[i][j];
-			this->outputs->at(i).push_back(value);
-		}
-	}
-
+    // Allocate memory only for the individual's output buffer
+	outputs_individual = std::make_shared<std::vector<E>>(num_outputs);
 }
 
 /// @brief Copy constructor for deep cloning 

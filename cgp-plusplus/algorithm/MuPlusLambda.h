@@ -99,6 +99,7 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
 
 	// <<< BATCH TRACKING >>>
     double current_batch_min_acc = 0.0; // Accuracy at the beginning of the batch
+	F current_batch_min_loss = 0.0; // Loss at the beginning of the batch
     int current_batch_idx = 0;          // Index for current batch
     bool first_eval_of_batch = true;    // Flag for the first evaluation of the batch
 
@@ -116,17 +117,22 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
             this->population->sort(); // Assicuriamoci che sia ordinata
             auto best_ind_end = this->population->get_individual(0);
 
+			this->evaluator->decode_path(best_ind_end);
+
 			auto problem = this->composite->get_problem();
             int total_samples = problem->get_num_instances(); // Ritorna 2000 se hai fatto la mod precedente
             int hits_end = problem->validate_individual(best_ind_end);
 
 			double batch_max_acc = (double)hits_end / total_samples * 100.0;
+			F batch_max_loss = best_ind_end->get_fitness();
 
             // Scrivi nel file .stat se disponibile
             if (this->stat_stream) {
                 *this->stat_stream << "Batch " << current_batch_idx 
                                    << " :: Min Accuracy: " << current_batch_min_acc << "%"
                                    << " :: Max Accuracy: " << batch_max_acc << "%" 
+								   << " minloss: " << current_batch_min_loss  // [NEW] Stampa minloss
+                                   << " maxloss: " << batch_max_loss          // [NEW] Stampa maxloss
                                    << std::endl;
                 this->stat_stream->flush();
             }
@@ -182,6 +188,7 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
             int hits_start = problem->validate_individual(best_ind_current);
             
             current_batch_min_acc = (double)hits_start / total_samples * 100.0;
+			current_batch_min_loss = best_ind_current->get_fitness();
             
             first_eval_of_batch = false; // Fatto, non ricalcolare fino al prossimo switch
         }

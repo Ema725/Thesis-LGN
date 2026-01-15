@@ -297,29 +297,30 @@ int main(int argcc, char **argvv, char **envp) {
 
 	// ---------------------------------------------------------------------------------------
 
-	// Initialize the data and the elements used to run CGP
-	// ---------------------------------------------------------------------------------------
-	initializer->read_data();
-	initializer->init_functions();
-	initializer->init_composite();
-	initializer->init_erc();
-	initializer->init_problem();
-	initializer->init_checkpoint();
-	initializer->init_algorithm();
-
-
-	// Check for a checkpoint file
-	// ---------------------------------------------------------------------------------------
-	if (checkpoint_file != "")
-		initializer->init_checkpoint_file(checkpoint_file);
-
-	// Create the evolver
-	// ---------------------------------------------------------------------------------------
-	std::shared_ptr<Evolver<EVALUATION_TYPE, GENOME_TYPE, FITNESS_TYPE>> evolver =
-			std::make_shared<Evolver<EVALUATION_TYPE, GENOME_TYPE, FITNESS_TYPE>>(
-					initializer);
+	
 
 	try { 
+			// Initialize the data and the elements used to run CGP
+		// ---------------------------------------------------------------------------------------
+		initializer->read_data();
+		initializer->init_functions();
+		initializer->init_composite();
+		initializer->init_erc();
+		initializer->init_problem();
+		initializer->init_checkpoint();
+		initializer->init_algorithm();
+
+
+		// Check for a checkpoint file
+		// ---------------------------------------------------------------------------------------
+		if (checkpoint_file != "")
+			initializer->init_checkpoint_file(checkpoint_file);
+
+		// Create the evolver
+		// ---------------------------------------------------------------------------------------
+		std::shared_ptr<Evolver<EVALUATION_TYPE, GENOME_TYPE, FITNESS_TYPE>> evolver =
+				std::make_shared<Evolver<EVALUATION_TYPE, GENOME_TYPE, FITNESS_TYPE>>(
+						initializer);
         if (checkpoint_file == "") {
             std::cout << "[DEBUG] i'm calling evolver->run()..." << std::endl; // <<< DEBUG PRINT
             evolver->run();

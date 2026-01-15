@@ -34,11 +34,14 @@ public:
         this->bits_per_class = this->parameters->get_num_outputs() / NUM_CLASSES;
     }
 
-    // Upload full dataset
-    void set_full_dataset(const std::vector<std::vector<E>>& all_inputs, 
-                          const std::vector<std::vector<E>>& all_outputs) {
-        this->full_inputs = all_inputs;
-        this->full_outputs = all_outputs;
+    // Upload full dataset (Move semantics)
+    void set_full_dataset(std::vector<std::vector<E>>&& all_inputs, 
+                          std::vector<std::vector<E>>&& all_outputs) {
+        std::cout << "[DEBUG] MnistLogicProblem: Moving full dataset..." << std::endl;
+        this->full_inputs = std::move(all_inputs);
+        this->full_outputs = std::move(all_outputs);
+        std::cout << "[DEBUG] MnistLogicProblem: Dataset moved. Sizes: " 
+                  << this->full_inputs.size() << " / " << this->full_outputs.size() << std::endl;
     }
 
     // change batch
@@ -291,6 +294,34 @@ public:
                 return ((50 - ones_ground_truth) * 100 + (sum_incorrect_bits)) * 0.5;
             } else {
                 return (50 - ones_ground_truth) * 100 + (sum_incorrect_bits);
+            }
+
+            case 21: //jaccard
+            {
+                int M01 = ones_ground_truth - ones_prediction;
+                int denominator = ones_ground_truth + sum_incorrect_bits;
+                int numerator = M01 + sum_incorrect_bits;
+                //M10 = sum_incorrect_bits
+                if(numerator == 0) {
+                    return 0.0; //perfect classification
+                }else {
+                    return static_cast<F>(numerator/ static_cast<F>(denominator));
+                }
+            }
+
+            case 22: // boosted jaccard
+            {
+                int M01 = ones_ground_truth - ones_prediction;
+                int denominator = ones_ground_truth + sum_incorrect_bits;
+                int numerator = M01 + sum_incorrect_bits;
+                //M10 = sum_incorrect_bits
+                if(numerator == 0) {
+                    return 0.0; //perfect classification
+                } else if (best_class != true_label) {
+                    return static_cast<F>((numerator/ static_cast<F>(denominator)) * 500);
+                } else {
+                    return static_cast<F>((numerator/ static_cast<F>(denominator))* 500 ) * 0.5;
+                }
             }
 
             default:

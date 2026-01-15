@@ -45,55 +45,62 @@ public:
 
         int num_samples_file, num_inputs_file, num_classes_file;
         
-        // 1. Read the header -> check what it does
+        // 1. Read the header
         if (!(ifs >> num_samples_file >> num_inputs_file >> num_classes_file)) {
             throw std::runtime_error("Error reading MNIST header!");
         }
 
         std::cout << "Loading MNIST Data..." << std::endl;
-        std::cout << "Samples: " << num_samples_file 
+        std::cout << "Samples in file: " << num_samples_file 
                   << ", Inputs: " << num_inputs_file 
                   << ", Classes: " << num_classes_file << std::endl;
 
-        // Verififies parameters consistency
+        // [FIX CRITICO] Separiamo quante righe leggere (TUTTE) da quante usarne attivamente (BATCH)
+        int total_samples_to_read = num_samples_file;
+
         if (this->parameters->is_batch_training()) {
-            if (num_samples_file != this->parameters->get_file_size()) {
-                std::cout << "WARNING: file_size in params differs from file header!" << std::endl;
-            }
+            // Se usiamo batch training, l'istanza attiva avrà dimensione ridotta (es. 200)
             this->num_instances = this->parameters->get_batch_size();
+            
+            // Check di coerenza opzionale
+            if (num_samples_file != this->parameters->get_file_size()) {
+                std::cout << "WARNING: file_size in params (" << this->parameters->get_file_size() 
+                          << ") differs from file header (" << num_samples_file << ")!" << std::endl;
+            }
         } else {
+            // Se no, usiamo tutto
             this->num_instances = num_samples_file;
         }
               
-        // 2. for now i set a single batch with all samples
-        this->num_instances = num_samples_file;
         this->parameters->set_num_variables(num_inputs_file); // 784
         
         // Total outputs = Classes * Bits per class (e.g. 10 * 50 = 500)
         int total_outputs = num_classes_file * BITS_PER_CLASS;
         this->parameters->set_num_outputs(total_outputs);
 
-        // Allocates active input/output vectors
+        // Allocates active input/output vectors (Questi conterranno solo la batch corrente)
         this->inputs = std::make_shared<std::vector<std::vector<E>>>();
         this->outputs = std::make_shared<std::vector<std::vector<E>>>();
 
-        // Temporary storage for ALL data
+        // Temporary storage for ALL data (Questo deve contenere TUTTO il file)
         std::vector<std::vector<E>> all_inputs_vec;
         std::vector<std::vector<E>> all_outputs_vec;
+
+        // Pre-allocazione per performance
+        all_inputs_vec.reserve(total_samples_to_read);
+        all_outputs_vec.reserve(total_samples_to_read);
 
         // Read the rows (Label + Pixel)
         int label;
         E pixel_val;
 
-        for (int i = 0; i < this->num_instances; ++i) {
+        // [FIX] Usiamo total_samples_to_read (60000) invece di this->num_instances (200)
+        for (int i = 0; i < total_samples_to_read; ++i) {
             // Read the Label (first column)
             if (!(ifs >> label)) {
                 throw std::runtime_error("Error reading label at line " + std::to_string(i + 1));
             }
 
-            // Save the label as the FIRST element of the output vector.
-            // The MnistLogicProblem will know that outputs[i][0] is the target class.
-            // Resize to 1 just to hold the label (saves memory compared to 500)
             std::vector<E> row_out;
             row_out.push_back(static_cast<E>(label));
             all_outputs_vec.push_back(row_out);
@@ -107,16 +114,18 @@ public:
             all_inputs_vec.push_back(row_in);
         }
 
-        std::cout << "MNIST Data Loaded Successfully." << std::endl;
+        std::cout << "MNIST Data Loaded Successfully. Read " << all_inputs_vec.size() << " samples." << std::endl;
         ifs.close();
 
-        // Initialize the active vectors with the first batch (or all)
-        int init_size = this->num_instances; 
-        for(int i=0; i<init_size; i++) {
+        // Initialize the active vectors with the first batch ONLY
+        // Qui usiamo this->num_instances (che è 200 nel caso batch)
+        int active_size = this->num_instances; 
+        for(int i=0; i<active_size; i++) {
             this->inputs->push_back(all_inputs_vec[i]);
             this->outputs->push_back(all_outputs_vec[i]);
         }
 
+        // Store completo per i futuri switch
         this->full_inputs_store = all_inputs_vec;
         this->full_outputs_store = all_outputs_vec;
     }
@@ -132,12 +141,18 @@ public:
      * @brief Initialize the MNIST Logic problem.
      */
     void init_problem() override {
+        std::cout << "[DEBUG] MnistLogicInitializer::init_problem -> Start" << std::endl;
 
         int training_instances = this->num_instances;
         if (this->parameters->is_batch_training()) {
             training_instances = this->parameters->get_batch_size();
         }
+        
+        // Verifica puntatori critici prima di usarli
+        if (!this->evaluator) std::cerr << "[ERROR] Evaluator is NULL!" << std::endl;
+        if (!this->inputs) std::cerr << "[ERROR] Inputs vector is NULL!" << std::endl;
 
+        std::cout << "[DEBUG] Creating MnistLogicProblem instance..." << std::endl;
         auto mnist_problem = std::make_shared<MnistLogicProblem<E, G, F>>(
             this->parameters, 
             this->evaluator, 
@@ -147,7 +162,9 @@ public:
             training_instances
         );
         
-        mnist_problem->set_full_dataset(this->full_inputs_store, this->full_outputs_store);
+        std::cout << "[DEBUG] Calling set_full_dataset (with std::move)..." << std::endl;
+        // QUI usiamo std::move per trasferire la proprietà dei vettori senza copiarli
+        mnist_problem->set_full_dataset(std::move(this->full_inputs_store), std::move(this->full_outputs_store));
         
         this->problem = mnist_problem;
 
@@ -158,8 +175,11 @@ public:
              this->parameters->set_ideal_fitness(0.01);
         }
 
-        // REGISTRATION IN THE COMPOSITE (check what it does)
+        std::cout << "[DEBUG] Registering problem in composite..." << std::endl;
+        // REGISTRATION IN THE COMPOSITE
         this->composite->set_problem(this->problem);
+        
+        std::cout << "[DEBUG] MnistLogicInitializer::init_problem -> End" << std::endl;
     }
 };
 
