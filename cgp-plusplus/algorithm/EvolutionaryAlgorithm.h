@@ -46,6 +46,7 @@ class EvolutionaryAlgorithm {
 protected:
 	long long max_fitness_evaluations;
 	long long max_generations;
+	int start_generation_number = 0;
 	int report_interval;
 	int generation_number;
 	int fitness_evaluations;
@@ -108,6 +109,9 @@ public:
 	void set_generation_number(int p_generation_number);
 	void set_output_stream(std::shared_ptr<std::ostream> stream) {
         this->stat_stream = stream;
+    }
+	void set_start_generation_number(int p_start_generation_number) {
+        this->start_generation_number = p_start_generation_number;
     }
 
 };
@@ -317,14 +321,18 @@ void EvolutionaryAlgorithm<E, G, F>::check_ideal(int generation_number) {
 template<class E, class G, class F>
 void EvolutionaryAlgorithm<E, G, F>::check_checkpoint() {
 	if (this->checkpointing) {
-		if (this->generation_number % this->checkpoint_modulo == 0) {
-			this->checkpoint->write(this->population, this->constants, this->generation_number);
+		if (this->generation_number == this->start_generation_number) {
+                return;
+            }
 
-			if (this->report_during_job) {
-				std::cout << "Checkpoint written at generation # "
-						<< this->generation_number << std::endl;
-			}
-		}
+            if (this->generation_number % this->checkpoint_modulo == 0) {
+                this->checkpoint->write(this->population, this->constants, this->generation_number);
+
+                if (this->report_during_job) {
+                    std::cout << "Checkpoint written at generation # "
+                            << this->generation_number << std::endl;
+                }
+            }
 	}
 }
 

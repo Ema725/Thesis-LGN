@@ -47,6 +47,9 @@ public:
 	void create_dir();
 	void init();
 	std::vector<std::string> split_genome(string genome_str);
+	void set_dir_name(const std::string& name) {
+        this->dir_name = name;
+    }
 };
 
 template<class E, class G, class F>

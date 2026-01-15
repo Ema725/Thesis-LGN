@@ -125,16 +125,34 @@ void Evolver<E, G, F>::resume(std::string &checkpoint) {
 	if (this->parameters->is_print_configuration())
 		this->print_configuration();
 
+    // 1. Load generation number (already implemented)
 	int generation_number = this->algorithm->get_generation_number();
 
+    // [NEW] Prevent re-saving the initial checkpoint immediately
+    this->algorithm->set_start_generation_number(generation_number);
+
+    // [NEW] Extract directory name from path to save future checkpoints in the SAME folder
+    // Expected path format: data/checkpoints/<TIMESTAMP>/generation-X.checkpoint
+    std::filesystem::path checkpoint_path(checkpoint);
+    if (checkpoint_path.has_parent_path()) {
+        // Parent path is likely data/checkpoints/<TIMESTAMP>
+        // We want just <TIMESTAMP> to set as dir_name
+        std::string folder_name = checkpoint_path.parent_path().filename().string();
+        
+        std::cout << "[DEBUG] Resuming with checkpoint folder: " << folder_name << std::endl;
+        this->composite->get_checkpoint()->set_dir_name(folder_name);
+    }
+
 	std::cout << "Resuming job from checkpoint: " << checkpoint
-			<< "at generation:" << generation_number << std::endl << std::endl;
+			<< " at generation: " << generation_number << std::endl << std::endl;
 
 	std::shared_ptr<std::ofstream> ofs;
 
 	// If statfile output is enabled, open the file for writing
 	if (this->parameters->is_write_statfile()) {
 		std::string statfile = this->statfile_name();
+		// Use app (append) instead of trunc if you want to keep history, 
+        // though standard logic here seems to create a NEW stat file with timestamp.
 		ofs = std::make_shared<std::ofstream>(statfile,
 				std::ofstream::out | std::fstream::trunc);
 		
@@ -144,7 +162,6 @@ void Evolver<E, G, F>::resume(std::string &checkpoint) {
 	this->execute_job(1, ofs);
 
 	ofs->close();
-
 }
 
 /// @brief  Runs the a experiment by executing the specified number of jobs.
