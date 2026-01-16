@@ -324,6 +324,38 @@ public:
                 }
             }
 
+            case 23: // Alberto Incompleta
+            {
+                // 1. Calcolo di e^j (Errore di Probabilità)
+                // p_i^j = bit_attivi_classe_corretta / L_c
+                // e^j = 1 - p_i^j
+                double p_true = static_cast<double>(ones_ground_truth) / this->bits_per_class;
+                double e_j = 1.0 - p_true;
+
+                // 2. Calcolo di P0 (Penalità di Normalizzazione)
+                // Vincolo: Somma di tutti i bit a 1 (su tutte le classi) deve essere pari a L_c (50)
+                // P0 è un fattore moltiplicativo > 1.0 se il vincolo è violato
+                int total_ones = ones_ground_truth + sum_incorrect_bits;
+                double P0 = 1.0;
+                
+                if (total_ones != this->bits_per_class) {
+                    // Esempio: Aumenta la penalità del 10% per ogni bit di deviazione
+                    // Questo forza la rete a spegnere i bit delle classi sbagliate per bilanciare
+                    P0 = 1.0 + (std::abs(total_ones - this->bits_per_class) * 0.1); 
+                }
+
+                // 3. Calcolo di P1 (Penalità Errata Classificazione)
+                // Se la classe predetta è sbagliata, moltiplichiamo l'errore
+                double P1 = 1.0;
+                if (best_class != true_label) {
+                    P1 = 5.0; // Fattore di penalità configurabile (es. 5x)
+                }
+
+                // Formula finale: E = P1 * (P0 * e^j)
+                // Nota: P2 (logica dei quartili) è omesso perché richiede valutazione globale
+                return static_cast<F>(P1 * P0 * e_j);
+            }
+
             default:
                 throw std::invalid_argument("Unknown fitness_function type!");
         }
