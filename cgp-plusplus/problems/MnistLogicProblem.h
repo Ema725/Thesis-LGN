@@ -122,6 +122,124 @@ public:
     }
 
     /**
+     * @brief Override di evaluate_individual per gestire la fitness globale P2 (Fitness 23).
+     */
+    void evaluate_individual(std::shared_ptr<Individual<G, F>> individual) override {
+
+        // Se NON stiamo usando la fitness 24, usa il comportamento standard
+        if (this->parameters->get_fitness_function() != 24) {
+            BlackBoxProblem<E, G, F>::evaluate_individual(individual);
+            return;
+        }
+
+        if (individual->is_evaluated()) {
+            return;
+        }
+
+        F total_fitness = 0;
+        int error_count = 0; // Contatore errori accumulati nella batch
+        
+        // Definiamo i quartili per la penalità P2 in base alla dimensione della batch corrente
+        int limit_q1 = this->num_instances * 0.25;
+        int limit_q2 = this->num_instances * 0.50;
+        int limit_q3 = this->num_instances * 0.75;
+        
+        // Valore base di P2 (come da formula nel PDF può essere un fattore di scala, qui 1.0)
+        double P2_base = 1.0; 
+
+        std::shared_ptr<std::vector<E>> outputs_ind = std::make_shared<std::vector<E>>();
+        std::shared_ptr<std::vector<E>> input_instance;
+
+        // Iterazione su tutte le istanze della batch
+        for (int i = 0; i < this->num_instances; i++) {
+            
+            // 1. Preparazione Input (copia e aggiunta costanti)
+            input_instance = std::make_shared<std::vector<E>>(this->inputs->at(i));
+            if (this->num_constants > 0) {
+                input_instance->insert(std::end(*input_instance),
+                        std::begin(*this->constants), std::end(*this->constants));
+            }
+            outputs_ind->clear();
+
+            // 2. Valutazione Rete
+            mtx.lock();
+            this->evaluator->evaluate_iterative(individual, input_instance, outputs_ind);
+            mtx.unlock();
+
+            // 3. Logica di Classificazione (Bit Counting)
+            int true_label = static_cast<int>(this->outputs->at(i)[0]);
+            int best_class = -1;
+            int ones_prediction = -1;
+            int ones_ground_truth = 0;
+            int sum_incorrect_bits = 0;
+
+            for (int class_idx = 0; class_idx < NUM_CLASSES; ++class_idx) {
+                int current_bits_on = 0;
+                int start_idx = class_idx * this->bits_per_class;
+
+                for (int bit = 0; bit < this->bits_per_class; ++bit) {
+                    if (outputs_ind->at(start_idx + bit) != 0) {
+                        current_bits_on++;
+                    }
+                }
+
+                if (current_bits_on > ones_prediction) {
+                    ones_prediction = current_bits_on;
+                    best_class = class_idx;
+                }
+                
+                if (class_idx == true_label) {
+                    ones_ground_truth = current_bits_on;
+                } else {
+                    sum_incorrect_bits += current_bits_on;
+                }
+            }
+
+            // 4. Calcolo Componenti Fitness (e^j, P0, P1)
+            double p_true = static_cast<double>(ones_ground_truth) / this->bits_per_class;
+            double e_j = 1.0 - p_true; // Errore probabilistico [cite: 29]
+
+            // P0: Penalità Normalizzazione 
+            int total_ones = ones_ground_truth + sum_incorrect_bits;
+            double P0 = 1.0;
+            if (total_ones != this->bits_per_class) {
+                P0 = 1.0 + (std::abs(total_ones - this->bits_per_class) * 0.1);
+            }
+
+            // P1: Penalità Errata Classificazione 
+            double P1 = 1.0;
+            bool is_error = (best_class != true_label);
+            if (is_error) {
+                P1 = 5.0; 
+            }
+
+            // 5. Calcolo P2 (Penalità Crescente a Quartili)
+            double P2_multiplier = 1.0;
+            
+            if (is_error) {
+                error_count++; // Incrementa il contatore degli errori commessi finora
+                
+                if (error_count <= limit_q1) {
+                    P2_multiplier = 1.0; // Primo 25% errori: 1 * P2
+                } else if (error_count <= limit_q2) {
+                    P2_multiplier = 2.0; // Successivo 25%: 2 * P2
+                } else if (error_count <= limit_q3) {
+                    P2_multiplier = 4.0; // Successivo 25%: 4 * P2
+                } else {
+                    P2_multiplier = 8.0; // Ultimo 25%: 8 * P2
+                }
+            }
+
+            // Formula: E = P2_mult * P2_base * (P1 * P0 * e^j)
+            double instance_fitness = P2_multiplier * P2_base * (P1 * P0 * e_j);
+            total_fitness += static_cast<F>(instance_fitness);
+        }
+
+        individual->set_fitness(total_fitness);
+        individual->set_evaluated(true);
+    }
+
+    /**
      * @brief Evaluates a single prediction.
      * @param outputs_real Contains the true LABEL as the only element (see Initializer).
      * @param outputs_individual Contains the bit string produced by the network (e.g., 500 bits).
@@ -325,6 +443,38 @@ public:
             }
 
             case 23: // Alberto Incompleta
+            {
+                // 1. Calcolo di e^j (Errore di Probabilità)
+                // p_i^j = bit_attivi_classe_corretta / L_c
+                // e^j = 1 - p_i^j
+                double p_true = static_cast<double>(ones_ground_truth) / this->bits_per_class;
+                double e_j = 1.0 - p_true;
+
+                // 2. Calcolo di P0 (Penalità di Normalizzazione)
+                // Vincolo: Somma di tutti i bit a 1 (su tutte le classi) deve essere pari a L_c (50)
+                // P0 è un fattore moltiplicativo > 1.0 se il vincolo è violato
+                int total_ones = ones_ground_truth + sum_incorrect_bits;
+                double P0 = 1.0;
+                
+                if (total_ones != this->bits_per_class) {
+                    // Esempio: Aumenta la penalità del 10% per ogni bit di deviazione
+                    // Questo forza la rete a spegnere i bit delle classi sbagliate per bilanciare
+                    P0 = 1.0 + (std::abs(total_ones - this->bits_per_class) * 0.1); 
+                }
+
+                // 3. Calcolo di P1 (Penalità Errata Classificazione)
+                // Se la classe predetta è sbagliata, moltiplichiamo l'errore
+                double P1 = 1.0;
+                if (best_class != true_label) {
+                    P1 = 5.0; // Fattore di penalità configurabile (es. 5x)
+                }
+
+                // Formula finale: E = P1 * (P0 * e^j)
+                // Nota: P2 (logica dei quartili) è omesso perché richiede valutazione globale
+                return static_cast<F>(P1 * P0 * e_j);
+            }
+
+            case 24: // Alberto completa
             {
                 // 1. Calcolo di e^j (Errore di Probabilità)
                 // p_i^j = bit_attivi_classe_corretta / L_c
