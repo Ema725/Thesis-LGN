@@ -35,7 +35,7 @@ public:
     void read_data() override {
         std::ifstream ifs(this->benchmark_file);
 
-        std::cout << "[DEBUG] Batch Training Enabled? " << (this->parameters->is_batch_training() ? "YES" : "NO") << std::endl;
+        std::cout << "[DEBUG] Batch Training Enabled? " << (this->parameters->get_batch_training() > 0 ? "YES" : "NO") << std::endl;
         std::cout << "[DEBUG] Batch Size Param: " << this->parameters->get_batch_size() << std::endl;
         std::cout << "[DEBUG] File Size Param: " << this->parameters->get_file_size() << std::endl;
         
@@ -58,7 +58,7 @@ public:
         // [FIX CRITICO] Separiamo quante righe leggere (TUTTE) da quante usarne attivamente (BATCH)
         int total_samples_to_read = num_samples_file;
 
-        if (this->parameters->is_batch_training()) {
+        if (this->parameters->get_batch_training() > 0) {
             // Se usiamo batch training, l'istanza attiva avrà dimensione ridotta (es. 200)
             this->num_instances = this->parameters->get_batch_size();
             
@@ -144,7 +144,7 @@ public:
         std::cout << "[DEBUG] MnistLogicInitializer::init_problem -> Start" << std::endl;
 
         int training_instances = this->num_instances;
-        if (this->parameters->is_batch_training()) {
+        if (this->parameters->get_batch_training() > 0) {
             training_instances = this->parameters->get_batch_size();
         }
         

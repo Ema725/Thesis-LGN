@@ -108,7 +108,7 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
 		// <<< INIZIO NUOVA LOGICA BATCH >>>
         bool batch_switched = false;
 
-		if (this->parameters->is_batch_training() && 
+		if (this->parameters->get_batch_training() > 0 && 
             this->generation_number > 0 && 
             this->generation_number % this->parameters->get_batch_gen() == 0) {
 				
@@ -137,23 +137,34 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
                 this->stat_stream->flush();
             }
 
-            // 1. Calcola l'indice della nuova batch
-            int file_size = this->parameters->get_file_size();
-            int batch_size = this->parameters->get_batch_size();
-            int batch_gen = this->parameters->get_batch_gen();
-            
-            int total_batches = file_size / batch_size;
-            int batch_idx = (this->generation_number / batch_gen) % total_batches;
-            int start_idx = batch_idx * batch_size;
+            // B. CARICAMENTO NUOVA BATCH
+            if (this->parameters->get_batch_training() == 1) {
+                // --- MODE 1: SEQUENTIAL ---
+                int file_size = this->parameters->get_file_size();
+                int batch_size = this->parameters->get_batch_size();
+                int batch_gen = this->parameters->get_batch_gen();
+                
+                int total_batches = file_size / batch_size;
+                int batch_idx = (this->generation_number / batch_gen) % total_batches;
+                int start_idx = batch_idx * batch_size;
 
-            std::cout << ">>> BATCH SWITCH at Gen " << this->generation_number 
-                      << " -> Loading Batch " << batch_idx 
-                      << " (Range: " << start_idx << "-" << start_idx + batch_size << ")" << std::endl;
-					  
+                std::cout << ">>> BATCH SWITCH (SEQ) at Gen " << this->generation_number 
+                          << " -> Loading Batch " << batch_idx 
+                          << " (Range: " << start_idx << "-" << start_idx + batch_size << ")" << std::endl;
+                        
+                current_batch_idx = batch_idx;
+                problem->load_batch(start_idx, batch_size);
 
-			current_batch_idx = batch_idx;
-            // 2. Carica la nuova batch nel problema
-            problem->load_batch(start_idx, batch_size);
+            } else {
+                // --- MODE 2: RANDOM ---
+                int batch_size = this->parameters->get_batch_size();
+                
+                std::cout << ">>> BATCH SWITCH (RND) at Gen " << this->generation_number << std::endl;
+                
+                current_batch_idx = -1; // -1 indica random
+                // Chiama il nuovo metodo passando il generatore random
+                problem->load_random_batch(batch_size, this->random);
+            }
 
             // 3. Resetta la fitness di TUTTA la popolazione (Genitori inclusi)
             // Poiché i dati sono cambiati, la fitness calcolata prima non è più valida.

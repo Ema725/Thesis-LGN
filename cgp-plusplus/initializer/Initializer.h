@@ -174,7 +174,7 @@ void Initializer<E, G, F>::init_parfile_parameters(std::string parfile_path) {
             } else if (parameter == "fixed_layers") {
                 this->parameters->set_fixed_layers(value);
             } else if (parameter == "batch_training") {
-                this->parameters->set_batch_training(state);
+                this->parameters->set_batch_training(value);
             } else if (parameter == "file_size") {
                 this->parameters->set_file_size(value);
             } else if (parameter == "batch_size") {

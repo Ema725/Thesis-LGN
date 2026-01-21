@@ -74,6 +74,10 @@ public:
         // Override nelle classi derivate (es. MnistLogicProblem)
     }
 
+	virtual void load_random_batch(int batch_size, std::shared_ptr<Random> rng) {
+        // Default implementation (empty)
+    }
+
 	virtual BlackBoxProblem<E, G, F>* clone() = 0;
 	virtual F evaluate(std::shared_ptr<std::vector<E>> outputs_real,
 			std::shared_ptr<std::vector<E>> outputs_individual) = 0;

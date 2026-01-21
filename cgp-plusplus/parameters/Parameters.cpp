@@ -46,7 +46,7 @@ Parameters::Parameters() {
 	ideal_fitness = 0;
 	fitness_function = 0;
 
-	batch_training = false;
+	batch_training = 0;
     file_size = 0;
     batch_size = 0;
     batch_gen = 0;
@@ -356,8 +356,8 @@ void Parameters::set_fitness_function(int p_fitness_function) {
     this->fitness_function = p_fitness_function;
 }
 
-bool Parameters::is_batch_training() const { return batch_training; }
-void Parameters::set_batch_training(bool p_batch_training) { batch_training = p_batch_training; }
+int Parameters::get_batch_training() const { return batch_training; }
+void Parameters::set_batch_training(int p_batch_training) { batch_training = p_batch_training; }
 
 int Parameters::get_file_size() const { return file_size; }
 void Parameters::set_file_size(int p_file_size) { file_size = p_file_size; }

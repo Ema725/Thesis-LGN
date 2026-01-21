@@ -6,6 +6,7 @@
 #include <memory>
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 
 template<class E, class G, class F>
 class MnistLogicProblem : public BlackBoxProblem<E, G, F> {
@@ -62,6 +63,36 @@ public:
         }
         
         this->num_instances = batch_size;
+    }
+
+    // Aggiungi override nella classe MnistLogicProblem
+    void load_random_batch(int batch_size, std::shared_ptr<Random> rng) override {
+        this->inputs->clear();
+        this->outputs->clear();
+        
+        int total_samples = this->full_inputs.size();
+        
+        // Creiamo un vettore di indici [0, 1, ..., total-1]
+        static std::vector<int> indices;
+        if (indices.size() != (size_t)total_samples) {
+            indices.resize(total_samples);
+            std::iota(indices.begin(), indices.end(), 0); // Richiede <numeric>
+        }
+
+        // Fisher-Yates shuffle parziale per selezionare 'batch_size' elementi casuali
+        for (int i = 0; i < batch_size; i++) {
+            int j = rng->random_integer(i, total_samples - 1);
+            std::swap(indices[i], indices[j]);
+            
+            int idx = indices[i];
+            // Carica l'immagine corrispondente all'indice scelto
+            this->inputs->push_back(this->full_inputs[idx]);
+            this->outputs->push_back(this->full_outputs[idx]);
+        }
+        
+        this->num_instances = batch_size;
+        
+        std::cout << ">>> LOADED RANDOM BATCH (" << batch_size << " samples)" << std::endl;
     }
 
     ~MnistLogicProblem() = default;

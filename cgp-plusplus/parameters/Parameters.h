@@ -105,7 +105,7 @@ private:
 	int fitness_function;
 
 	// <<< BATCH TRAINING PARAMETERS >>>
-    bool batch_training;
+    int batch_training;
     int file_size;
     int batch_size;
     int batch_gen;
@@ -211,8 +211,8 @@ public:
 	int get_fixed_layers() const;
     void set_fixed_layers(int p_fixed_layers); //MODIFICATO
 
-	bool is_batch_training() const;
-    void set_batch_training(bool p_batch_training);
+	int get_batch_training() const;
+    void set_batch_training(int p_batch_training);
 
     int get_file_size() const;
     void set_file_size(int p_file_size);
