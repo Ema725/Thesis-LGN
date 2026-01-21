@@ -144,7 +144,7 @@ int Species<G>::min_gene(int position) {
     int node_idx_absolute = node_idx_relative + num_inputs;
 
     // Case 1: Fixed layers
-    if (parameters->is_fixed_layers()) {
+    if (parameters->get_fixed_layers() == 1) {
         int width = parameters->get_levels_back(); // In questa modalità, levels_back è la larghezza
         int current_layer = node_idx_relative / width;
 
@@ -156,8 +156,10 @@ int Species<G>::min_gene(int position) {
             int prev_layer_start_idx = num_inputs + ((current_layer - 1) * width);
             return prev_layer_start_idx;
         }
-    }
-    // Case 2: Standard behavior (Classic CGP)
+    } else if (parameters->get_fixed_layers() == 2) {
+		return 0;
+	}
+    // Case 0: Standard behavior (Classic CGP)
     else {
         int levels_back = parameters->get_levels_back();
         int min_val = node_idx_absolute - levels_back;
@@ -195,8 +197,8 @@ int Species<G>::max_gene(int position) {
     int node_idx_relative = position / (max_arity + 1);
     int node_idx_absolute = node_idx_relative + num_inputs;
 
-    // Case 1: Fixed layers
-    if (parameters->is_fixed_layers()) {
+    // Case 1 e 2: Fixed layers
+    if (parameters->get_fixed_layers() > 0) {
         int width = parameters->get_levels_back();
         int current_layer = node_idx_relative / width;
 

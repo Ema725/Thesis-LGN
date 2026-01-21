@@ -52,7 +52,7 @@ Parameters::Parameters() {
     batch_gen = 0;
 
 	neutral_genetic_drift = true;
-	fixed_layers = false;
+	fixed_layers = 0;
 
 	evaluate_expression = false;
 	minimizing_fitness = true;
@@ -547,11 +547,11 @@ void Parameters::set_checkpointing(bool p_checkpointing) {
 }
 
 //Fixed layers
-bool Parameters::is_fixed_layers() const {
+int Parameters::get_fixed_layers() const {
     return this->fixed_layers;
 }
 
-void Parameters::set_fixed_layers(bool p_fixed_layers) {
+void Parameters::set_fixed_layers(int p_fixed_layers) {
     this->fixed_layers = p_fixed_layers;
 }
 

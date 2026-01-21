@@ -111,7 +111,7 @@ private:
     int batch_gen;
 
 	bool neutral_genetic_drift;
-	bool fixed_layers;
+	int fixed_layers;
 
 	bool evaluate_expression;
 	bool minimizing_fitness;
@@ -208,8 +208,8 @@ public:
 	int get_levels_back() const;
 	void set_levels_back(int p_levels_back);
 
-	bool is_fixed_layers() const;
-    void set_fixed_layers(bool p_fixed_layers); //MODIFICATO
+	int get_fixed_layers() const;
+    void set_fixed_layers(int p_fixed_layers); //MODIFICATO
 
 	bool is_batch_training() const;
     void set_batch_training(bool p_batch_training);

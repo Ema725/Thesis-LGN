@@ -172,7 +172,7 @@ void Initializer<E, G, F>::init_parfile_parameters(std::string parfile_path) {
 			} else if (parameter == "fitness_function") {
                 this->parameters->set_fitness_function(value); //MODIFICATO
             } else if (parameter == "fixed_layers") {
-                this->parameters->set_fixed_layers(state);
+                this->parameters->set_fixed_layers(value);
             } else if (parameter == "batch_training") {
                 this->parameters->set_batch_training(state);
             } else if (parameter == "file_size") {
