@@ -155,6 +155,14 @@ int Checkpoint<E, G, F>::load(
 				global_seed = std::stod(value);
 			} else if (parameter == "genome") {
 				std::vector<std::string> genome = this->split_genome(value);
+				// [FIX] Safety Check: Verify loaded genome size matches parameters
+				int expected_size = this->parameters->get_genome_size();
+				if ((int)genome.size() != expected_size) {
+					std::cerr << "[CRITICAL WARNING] Checkpoint Genome Size Mismatch!" << std::endl;
+					std::cerr << "Expected: " << expected_size << ", Found: " << genome.size() << std::endl;
+					// Opzionale: throw exception se vuoi bloccare tutto subito
+					// throw std::runtime_error("Corrupted genome in checkpoint file");
+				}
 				genomes->push_back(genome);
 			} else if (parameter == "constant") {
 				try {
@@ -184,11 +192,15 @@ int Checkpoint<E, G, F>::load(
 template<class E, class G, class F>
 std::vector<std::string> Checkpoint<E, G, F>::split_genome(string genome_str) {
 	std::vector<string> vec;
-	unsigned int pos = 0;
-	while (pos <= genome_str.size()) {
-		pos = genome_str.find(",");
-		vec.push_back(genome_str.substr(0, pos));
-		genome_str.erase(0, pos + 1);
+	// Pre-allocate memory to avoid reallocations (estimation based on avg gene length)
+	vec.reserve(genome_str.size() / 2); 
+	
+	std::stringstream ss(genome_str);
+	std::string segment;
+
+	// Use getline to split by comma efficiently
+	while(std::getline(ss, segment, ',')) {
+		vec.push_back(segment);
 	}
 	return vec;
 }
