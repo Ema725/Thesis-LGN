@@ -41,6 +41,7 @@ public:
 	const MUTATION_TYPE SINGLE_ACTIVE_GENE_MUTATION = 1;
 	const MUTATION_TYPE INVERSION_MUTATION = 2;
 	const MUTATION_TYPE DUPLICATION_MUTATION = 3;
+	const MUTATION_TYPE FUNCTION_MUTATION = 4;
 
 	const CROSSOVER_TYPE BLOCK_CROSSOVER = 0;
 	const CROSSOVER_TYPE DISCRETE_CROSSOVER = 1;
@@ -92,6 +93,7 @@ private:
 
 	float inversion_rate;
 	float duplication_rate;
+	float function_mutation_rate;
 
 	int max_inversion_depth;
 	int max_duplication_depth;
@@ -294,6 +296,9 @@ public:
 
 	float get_duplication_rate() const;
 	void set_duplication_rate(float p_duplication_rate);
+
+	float get_function_mutation_rate() const;       // [NEW]
+	void set_function_mutation_rate(float rate);
 
 	int get_max_inversion_depth() const;
 	void set_max_inversion_depth(int p_max_inversion_depth);

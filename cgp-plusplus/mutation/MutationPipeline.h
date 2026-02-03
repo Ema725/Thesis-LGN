@@ -23,6 +23,7 @@
 #include "../variation/mutation/Inversion.h"
 #include "../variation/mutation/ProbabilisticPoint.h"
 #include "../variation/mutation/SingleActiveGene.h"
+#include "../variation/mutation/FunctionMutation.h"
 
 /// @brief Class to represent the mutation pipeline 
 /// @details Pipelining is established by using a vector that is iterated
@@ -111,7 +112,11 @@ void MutationPipeline<G, F>::init() {
 			op = std::make_shared<Inversion<G, F>>(
 					this->parameters, this->random, this->species);
 			pipeline->push_back(op);
-		}
+		} else if (type == parameters->FUNCTION_MUTATION) {
+            op = std::make_shared<FunctionMutation<G, F>>(
+                    this->parameters, this->random, this->species);
+            pipeline->push_back(op);
+        }
 	}
 }
 

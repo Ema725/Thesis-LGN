@@ -191,7 +191,11 @@ void Initializer<E, G, F>::init_parfile_parameters(std::string parfile_path) {
 					&& state == true) {
 				mutation_operators->push_back(
 						parameters->SINGLE_ACTIVE_GENE_MUTATION);
-			} else if (parameter == "inversion_mutation" && state == true) {
+			} else if (parameter == "function_mutation" && state == true) {
+				mutation_operators->push_back(parameters->FUNCTION_MUTATION);
+            } else if (parameter == "function_mutation_rate") {
+                this->parameters->set_function_mutation_rate(value);
+            }else if (parameter == "inversion_mutation" && state == true) {
 				mutation_operators->push_back(parameters->INVERSION_MUTATION);
 			} else if (parameter == "duplication_mutation" && state == true) {
 				mutation_operators->push_back(parameters->DUPLICATION_MUTATION);
