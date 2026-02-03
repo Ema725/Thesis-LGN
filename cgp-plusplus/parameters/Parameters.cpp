@@ -45,6 +45,9 @@ Parameters::Parameters() {
 	max_fitness_evaluations = -1;
 	ideal_fitness = 0;
 	fitness_function = 0;
+	one_fifth_rule = 0;
+	K = 0;
+	C = 0.0;
 
 	batch_training = 0;
     file_size = 0;
@@ -338,6 +341,32 @@ int Parameters::get_levels_back() const {
 void Parameters::set_levels_back(int p_levels_back) {
 	assert(p_levels_back > 0);
 	this->levels_back = p_levels_back;
+}
+
+int Parameters::get_one_fifth_rule() const {
+    return this->one_fifth_rule;
+}
+
+void Parameters::set_one_fifth_rule(int p_rule) {
+    this->one_fifth_rule = p_rule;
+}
+
+int Parameters::get_K() const {
+	return this->K;
+}
+
+void Parameters::set_K(int p_K) {
+	assert(p_K > 0);
+	this->K = p_K;
+}
+
+float Parameters::get_C() const {
+	return this->C;
+}
+
+void Parameters::set_C(float p_C) {
+	assert(p_C > 0.0);
+	this->C = p_C;
 }
 
 bool Parameters::is_minimizing_fitness() const {

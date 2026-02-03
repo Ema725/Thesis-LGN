@@ -55,11 +55,14 @@ void ProbabilisticPoint<G, F>::variate(std::shared_ptr<Individual<G, F>> individ
 	int max_gene;
 	int min_gene;
 
-	int num_mutations = this->mutation_rate * genome_size;
+    // [FIX] Leggi il mutation rate dinamico direttamente dai parametri
+	float current_mutation_rate = this->parameters->get_mutation_rate();
+	int num_mutations = current_mutation_rate * genome_size;
+	
 	int random_pos;
 
 	for (int i = 0; i < num_mutations; i++) {
-
+        // ... (resto del ciclo invariato)
 		random_pos = this->random->random_integer(0, genome_size - 1);
 
 		if (this->species->is_real_valued()) {
@@ -70,9 +73,7 @@ void ProbabilisticPoint<G, F>::variate(std::shared_ptr<Individual<G, F>> individ
 			genome[random_pos] = this->random->random_integer(
 					min_gene, max_gene);
 		}
-
 	}
-
 }
 
 #endif /* VARIATION_POINTMUTATION_H_ */

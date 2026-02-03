@@ -103,6 +103,12 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
     int current_batch_idx = 0;          // Index for current batch
     bool first_eval_of_batch = true;    // Flag for the first evaluation of the batch
 
+	// <<< 1/5th RULE VARIABLES >>>
+    int rule_k_counter = 0;         // Conta le generazioni
+    int rule_success_counter = 0;   // Conta le mutazioni di successo
+    const int RULE_K = this->parameters->get_K();         // Finestra di k generazioni
+    const float RULE_C = this->parameters->get_C();       // Fattore di moltiplicazione/divisione
+
 	while (this->generation_number <= this->max_generations && !this->is_ideal) {
 
 		// <<< INIZIO NUOVA LOGICA BATCH >>>
@@ -175,10 +181,90 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
             
             batch_switched = true;
 			first_eval_of_batch = true;
+			rule_k_counter = 0;
+            rule_success_counter = 0;
         }
 		
 		// Trigger the evaluation process
 		this->evaluate();
+
+		// 2. Applicazione Regola 1/5 (PRIMA del sort)
+        int rule_mode = this->parameters->get_one_fifth_rule();
+        
+        if (rule_mode > 0) {
+            int mu = this->parameters->get_mu();
+            int lambda = this->parameters->get_lambda();
+            
+            // Il miglior genitore è sempre all'indice 0
+            F parent_fitness = this->population->get_individual(0)->get_fitness();
+            
+            if (rule_mode == 1) {
+                // --- MODALITA' 1: STANDARD ---
+                // Conta ogni singolo figlio che batte il genitore.
+                // Success Rate = Successi / (K * Lambda)
+                for (int i = mu; i < mu + lambda; i++) {
+                    if (this->population->get_individual(i)->get_fitness() < parent_fitness) {
+                        rule_success_counter++;
+                    }
+                }
+            } 
+            else if (rule_mode == 2) {
+                // --- MODALITA' 2: BEST OFFSPRING ONLY ---
+                // Conta successo solo se il MIGLIOR figlio della covata batte il genitore.
+                // Success Rate = Successi / K
+                
+                F best_offspring_fitness = this->population->get_individual(mu)->get_fitness();
+                
+                // Trova il fitness migliore tra i figli (range [mu, mu+lambda-1])
+                for (int i = mu + 1; i < mu + lambda; i++) {
+                    F fit = this->population->get_individual(i)->get_fitness();
+                    if (fit < best_offspring_fitness) {
+                        best_offspring_fitness = fit;
+                    }
+                }
+
+                // Se il campione dei figli ha superato il genitore, è un successo per questa generazione
+                if (best_offspring_fitness < parent_fitness) {
+                    rule_success_counter++;
+                }
+            }
+            
+            rule_k_counter++;
+
+            // Se abbiamo raggiunto k generazioni, calcoliamo e resettiamo
+            if (rule_k_counter >= RULE_K) {
+                
+                double total_trials;
+                if (rule_mode == 1) {
+                    total_trials = (double)RULE_K * lambda; // Tutti i figli contano
+                } else {
+                    total_trials = (double)RULE_K;          // Un tentativo (di gruppo) per generazione
+                }
+
+                double success_rate = (double)rule_success_counter / total_trials;
+                float current_mut_rate = this->parameters->get_mutation_rate();
+                
+                // Applicazione Regola: > 0.2 aumenta mutazione, < 0.2 diminuisce
+                if (success_rate > 0.2) {
+                    float new_rate = current_mut_rate / RULE_C;
+                    if (new_rate > 1.0) new_rate = 1.0; // Cap a 1.0
+                    this->parameters->set_mutation_rate(new_rate);
+                } else if (success_rate < 0.2) {
+                    this->parameters->set_mutation_rate(current_mut_rate * RULE_C);
+                }
+
+				// Debug opzionale
+                
+                std::cout << "[1/5 Rule] Gen " << this->generation_number 
+                          << " Success Rate: " << success_rate 
+                          << " New Mut Rate: " << this->parameters->get_mutation_rate() << std::endl;
+                
+
+                // Reset contatori per la prossima finestra
+                rule_k_counter = 0;
+                rule_success_counter = 0;
+            }
+        }
 
 		// Increase the number of fitness evaluations by the number
 		// that has been used in the evaluation procedure

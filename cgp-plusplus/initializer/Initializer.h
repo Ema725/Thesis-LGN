@@ -203,7 +203,13 @@ void Initializer<E, G, F>::init_parfile_parameters(std::string parfile_path) {
 				this->parameters->set_crossover_rate(value);
 			} else if (parameter == "duplication_rate") {
 				this->parameters->set_duplication_rate(value);
-			} else if (parameter == "inversion_rate") {
+			} else if (parameter == "1_5_rule") {
+                this->parameters->set_one_fifth_rule((int)value);
+            } else if (parameter == "K") {
+                this->parameters->set_K((int)value);
+            } else if (parameter == "C") {
+                this->parameters->set_C((float)value);
+            } else if (parameter == "inversion_rate") {
 				this->parameters->set_inversion_rate(value);
 			} else if (parameter == "max_duplication_depth") {
 				this->parameters->set_max_duplication_depth(value);

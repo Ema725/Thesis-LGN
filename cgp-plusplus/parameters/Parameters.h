@@ -103,6 +103,9 @@ private:
 	int num_offspring;
 	int num_parents;
 	int fitness_function;
+	int one_fifth_rule;
+	int K;
+	float C;
 
 	// <<< BATCH TRAINING PARAMETERS >>>
     int batch_training;
@@ -264,6 +267,15 @@ public:
 
 	ALGORITHM get_algorithm() const;
 	void set_algorithm(ALGORITHM p_algorithm);
+
+	int get_one_fifth_rule() const; //regola 1_5
+    void set_one_fifth_rule(int p_rule);
+
+	int get_K() const;
+	void set_K(int p_K);
+
+	float get_C() const;
+	void set_C(float p_C);
 
 	bool is_generate_random_seed() const;
 	void set_generate_random_seed(bool p_generate_random_seed);
