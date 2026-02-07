@@ -249,15 +249,37 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
                     float new_rate = current_mut_rate / RULE_C;
                     if (new_rate > 1.0) new_rate = 1.0; // Cap a 1.0
                     this->parameters->set_mutation_rate(new_rate);
+
+                    // [NEW] Aumenta Function Mutation Rate (se attiva)
+                    if (current_func_rate > 0.0) {
+                        float new_func_rate = current_func_rate / RULE_C;
+                        if (new_func_rate > 1.0) new_func_rate = 1.0;
+                        this->parameters->set_function_mutation_rate(new_func_rate);
+                    }
+
                 } else if (success_rate < 0.2) {
                     this->parameters->set_mutation_rate(current_mut_rate * RULE_C);
+
+                    // [NEW] Diminuisci Function Mutation Rate (se attiva)
+                    if (current_func_rate > 0.0) {
+                        this->parameters->set_function_mutation_rate(current_func_rate * RULE_C);
+                    }
                 }
 
 				// Debug opzionale
                 
-                std::cout << "[1/5 Rule] Gen " << this->generation_number 
-                          << " Success Rate: " << success_rate 
-                          << " New Mut Rate: " << this->parameters->get_mutation_rate() << std::endl;
+                if(current_mut_rate > 0.0) {
+                    std::cout << "[1/5 Rule] Gen " << this->generation_number 
+                              << " Success Rate: " << success_rate 
+                              << " New Mut Rate: " << this->parameters->get_mutation_rate() 
+                              << std::endl;
+                }
+                if(current_func_rate > 0.0) {
+                    std::cout << "[1/5 Rule] Gen " << this->generation_number 
+                              << " Success Rate: " << success_rate 
+                              << " New Func Mut Rate: " << this->parameters->get_function_mutation_rate() 
+                              << std::endl;
+                }
                 
 
                 // Reset contatori per la prossima finestra
