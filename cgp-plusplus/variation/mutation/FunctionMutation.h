@@ -38,9 +38,11 @@ void FunctionMutation<G, F>::variate(std::shared_ptr<Individual<G, F>> individua
 
 	int num_function_nodes = this->parameters->get_num_function_nodes();
 	int max_arity = this->parameters->get_max_arity();
+
+	float current_rate = this->parameters->get_function_mutation_rate();
 	
     // Calcola il numero di mutazioni basato sulla percentuale dei nodi funzione
-	int num_mutations = (int)(this->mutation_rate * num_function_nodes);
+	int num_mutations = (int)(current_rate * num_function_nodes);
     
     // Se il rate è molto basso ma > 0, garantiamo almeno 1 mutazione? 
     // Opzionale, ma solitamente preferibile se num_mutations arrotonda a 0.
