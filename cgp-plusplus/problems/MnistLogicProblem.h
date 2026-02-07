@@ -292,6 +292,8 @@ public:
         //sum of bits at 1 for the incorrect classes
         int sum_incorrect_bits = 0;
 
+        int bits_per_class = this->bits_per_class;
+
 
         // Iterates for each class (0-9)
         for (int class_idx = 0; class_idx < NUM_CLASSES; ++class_idx) {
@@ -350,99 +352,99 @@ public:
             if (best_class == true_label) {
                 return 0.0;
             } else {
-                return 50.0 + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.1;
+                return bits_per_class + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.1;
             }
 
             case 5: //minfitness = 0
             if (best_class == true_label) {
                 return 0.0;
             } else {
-                return 50.0 + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.05;
+                return bits_per_class + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.05;
             }
 
             case 6: //minfitness = -500
             if (best_class == true_label) {
                 return 0.0 - (ones_ground_truth - max_incorrect_bits);
             } else {
-                return 50.0 + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.05;
+                return bits_per_class + (ones_prediction - ones_ground_truth) + (sum_incorrect_bits) * 0.05;
             }
 
             case 7:
             if (best_class == true_label) {
                 return 0.0;
             } else {
-                return (50 - ones_ground_truth) * 2 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 2 + (sum_incorrect_bits);
             }
 
             case 8: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - ones_ground_truth);
+            return sum_incorrect_bits + (bits_per_class - ones_ground_truth);
 
             case 9: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - ones_ground_truth) * 2;
+            return sum_incorrect_bits + (bits_per_class - ones_ground_truth) * 2;
 
             case 10: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - ones_ground_truth) * 5;
+            return sum_incorrect_bits + (bits_per_class - ones_ground_truth) * 5;
 
             case 11: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - ones_ground_truth) * 10;
+            return sum_incorrect_bits + (bits_per_class - ones_ground_truth) * 10;
 
             case 12: //somma dei bit incorretti + somma dei bit a 0 nella classe corretta
-            return sum_incorrect_bits + (50 - ones_ground_truth) * 100;
+            return sum_incorrect_bits + (bits_per_class - ones_ground_truth) * 100;
 
             case 13: //9 mod
             if (best_class == true_label) {
-                return (50 - ones_ground_truth) + (sum_incorrect_bits) * 0.5;
+                return (bits_per_class - ones_ground_truth) + (sum_incorrect_bits) * 0.5;
             } else {
-                return (50 - ones_ground_truth) * 2 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 2 + (sum_incorrect_bits);
             }
 
             case 14: //10 mod
             if (best_class == true_label) {
-                return ((50 - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.5;
+                return ((bits_per_class - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.5;
             } else {
-                return (50 - ones_ground_truth) * 5 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 5 + (sum_incorrect_bits);
             }
 
             case 15: //10 mod 2
             if (best_class == true_label) {
-                return ((50 - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.75;
+                return ((bits_per_class - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.75;
             } else {
-                return (50 - ones_ground_truth) * 5 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 5 + (sum_incorrect_bits);
             }
 
             case 16: //10 mod 3
             if (best_class == true_label) {
-                return ((50 - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.25;
+                return ((bits_per_class - ones_ground_truth) * 5 + (sum_incorrect_bits)) * 0.25;
             } else {
-                return (50 - ones_ground_truth) * 5 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 5 + (sum_incorrect_bits);
             }
 
             case 17: //11 mod
             if (best_class == true_label) {
-                return ((50 - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.5;
+                return ((bits_per_class - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.5;
             } else {
-                return (50 - ones_ground_truth) * 10 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 10 + (sum_incorrect_bits);
             }
 
             case 18: //11 mod 2
             if (best_class == true_label) {
-                return ((50 - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.75;
+                return ((bits_per_class - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.75;
             } else {
-                return (50 - ones_ground_truth) * 10 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 10 + (sum_incorrect_bits);
             }
 
             case 19: //11 mod 3
             if (best_class == true_label) {
-                return ((50 - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.25;
+                return ((bits_per_class - ones_ground_truth) * 10 + (sum_incorrect_bits)) * 0.25;
             } else {
-                return (50 - ones_ground_truth) * 10 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 10 + (sum_incorrect_bits);
             }
 
             case 20: //12 mod
             if (best_class == true_label) {
-                return ((50 - ones_ground_truth) * 100 + (sum_incorrect_bits)) * 0.5;
+                return ((bits_per_class - ones_ground_truth) * 100 + (sum_incorrect_bits)) * 0.5;
             } else {
-                return (50 - ones_ground_truth) * 100 + (sum_incorrect_bits);
+                return (bits_per_class - ones_ground_truth) * 100 + (sum_incorrect_bits);
             }
 
             case 21: //jaccard

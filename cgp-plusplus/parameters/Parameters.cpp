@@ -225,7 +225,6 @@ float Parameters::get_mutation_rate() const {
 }
 
 void Parameters::set_mutation_rate(float p_mutation_rate) {
-	assert(p_mutation_rate > 0.0);
 	this->mutation_rate = p_mutation_rate;
 }
 
@@ -234,7 +233,6 @@ float Parameters::get_function_mutation_rate() const {
 }
 
 void Parameters::set_function_mutation_rate(float rate) {
-	assert(rate >= 0.0 && rate <= 1.0);
 	this->function_mutation_rate = rate;
 }
 

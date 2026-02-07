@@ -15,7 +15,7 @@ class MnistLogicInitializer : public BlackBoxInitializer<E, G, F> {
 public:
     // Parameter for number of bits per class (e.g., 50)
     // Total output = 10 classes * 50 bits = 500
-    const int BITS_PER_CLASS = 50; 
+    int bits_per_class = 50; 
 
     MnistLogicInitializer(const std::string &p_benchmark_file)
         : BlackBoxInitializer<E, G, F>(p_benchmark_file) {
@@ -75,8 +75,28 @@ public:
         this->parameters->set_num_variables(num_inputs_file); // 784
         
         // Total outputs = Classes * Bits per class (e.g. 10 * 50 = 500)
-        int total_outputs = num_classes_file * BITS_PER_CLASS;
-        this->parameters->set_num_outputs(total_outputs);
+        int configured_outputs = this->parameters->get_num_outputs();
+
+        if (configured_outputs <= 0) {
+            // Caso Default: Usa il valore predefinito (50)
+            int total_outputs = num_classes_file * this->bits_per_class;
+            this->parameters->set_num_outputs(total_outputs);
+            
+            std::cout << "[INFO] num_outputs default set to: " << total_outputs 
+                      << " (" << this->bits_per_class << " bits/class)" << std::endl;
+        } else {
+            // Caso Parametro Utente: Calcola bits_per_class
+            if (configured_outputs % num_classes_file != 0) {
+                throw std::runtime_error("Error: num_outputs (" + std::to_string(configured_outputs) + 
+                                         ") must be a multiple of classes (" + std::to_string(num_classes_file) + ")!");
+            }
+            
+            // Aggiorna la variabile membro con il valore reale
+            this->bits_per_class = configured_outputs / num_classes_file;
+            
+            std::cout << "[INFO] Using configured num_outputs: " << configured_outputs 
+                      << " -> Dynamic bits_per_class: " << this->bits_per_class << std::endl;
+        }
 
         // Allocates active input/output vectors (Questi conterranno solo la batch corrente)
         this->inputs = std::make_shared<std::vector<std::vector<E>>>();

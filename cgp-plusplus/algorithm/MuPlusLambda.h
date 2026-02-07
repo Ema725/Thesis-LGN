@@ -243,6 +243,7 @@ std::pair<int, F> MuPlusLambda<E, G, F>::evolve() {
 
                 double success_rate = (double)rule_success_counter / total_trials;
                 float current_mut_rate = this->parameters->get_mutation_rate();
+                float current_func_rate = this->parameters->get_function_mutation_rate();
                 
                 // Applicazione Regola: > 0.2 aumenta mutazione, < 0.2 diminuisce
                 if (success_rate > 0.2) {
